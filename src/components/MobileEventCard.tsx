@@ -123,7 +123,7 @@ export const MobileEventCard: React.FC<MobileEventCardProps> = ({ event }) => {
           </div>
           <div className="flex items-center justify-between mt-2">
             {event.event_types && event.event_types.length > 0 && (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.event_types[0])}`}>
+              <span className={\`px-2 py-1 rounded-full text-xs font-medium ${getEventTypeColor(event.event_types[0])}`}>
                 {event.event_types[0]}
               </span>
             )}
@@ -134,7 +134,7 @@ export const MobileEventCard: React.FC<MobileEventCardProps> = ({ event }) => {
                   handleRsvp(rsvpStatus === 'going' ? 'not_going' : 'going')
                 }}
                 disabled={rsvpLoading}
-                className={`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                className={\`flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   rsvpStatus === 'going'
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
