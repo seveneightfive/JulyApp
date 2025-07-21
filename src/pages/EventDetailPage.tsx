@@ -1,42 +1,51 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, Clock, DollarSign, Users, ExternalLink, ArrowLeft, Heart, Share2, Star, Check, UserCheck } from 'lucide-react'
+import { Search, Filter, Calendar, X } from 'lucide-react'
 import { Layout } from '../components/Layout'
-import { ReviewSection } from '../components/ReviewSection'
-import { useAuth } from '../hooks/useAuth'
-import { supabase, type Event, type EventRSVP, trackPageView } from '../lib/supabase'
+import { EventCard } from '../components/EventCard'
+import { MobileEventCard } from '../components/MobileEventCard'
+import { supabase, type Event, trackPageView } from '../lib/supabase'
 
-export const EventDetailPage: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [event, setEvent] = useState<Event | null>(null)
+const getEventTypeColor = (eventType: string) => {
+  const colors: { [key: string]: string } = {
+    'Art': 'bg-pink-100 text-pink-800',
+    'Entertainment': 'bg-purple-100 text-purple-800',
+    'Lifestyle': 'bg-blue-100 text-blue-800',
+    'Local Flavor': 'bg-green-100 text-green-800',
+    'Live Music': 'bg-teal-100 text-teal-800',
+    'Party For A Cause': 'bg-orange-100 text-orange-800',
+    'Community / Cultural': 'bg-indigo-100 text-indigo-800',
+    'Shop Local': 'bg-yellow-100 text-yellow-800'
+  }
+  return colors[eventType] || 'bg-gray-100 text-gray-800'
+}
+const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
+
+export const EventsDirectoryPage: React.FC = () => {
+  const [events, setEvents] = useState<Event[]>([])
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
-  const [isFollowing, setIsFollowing] = useState(false)
-  const [followLoading, setFollowLoading] = useState(false)
-  const [rsvpStatus, setRsvpStatus] = useState<'going' | 'interested' | 'not_going' | null>(null)
-  const [rsvpLoading, setRsvpLoading] = useState(false)
-  const [rsvpCount, setRsvpCount] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+  const [showFilters, setShowFilters] = useState(false)
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
+  const [eventCounts, setEventCounts] = useState<Record<string, number>>({
+    all: 0,
+    today: 0,
+    week: 0,
+    month: 0
+  })
 
   useEffect(() => {
-    if (slug) {
-      fetchEvent()
-    }
-  }, [slug])
+    trackPageView('events-directory')
+    fetchEvents()
+  }, [])
 
   useEffect(() => {
-    if (event && user) {
-      checkFollowStatus()
-      checkRSVPStatus()
-    }
-    if (event) {
-      fetchRSVPCount()
-    }
-  }, [event, user])
+    filterEvents()
+    calculateEventCounts()
+  }, [events, searchQuery, selectedTypes, dateFilter])
 
-  const fetchEvent = async () => {
-    if (!slug) return
-
+  const fetchEvents = async () => {
     const { data, error } = await supabase
       .from('events')
       .select(`
@@ -47,513 +56,403 @@ export const EventDetailPage: React.FC = () => {
           is_featured
         )
       `)
-      .eq('slug', slug)
-      .single()
+      .gte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true })
 
     if (error) {
-      console.error('Error fetching event:', error)
-      navigate('/events')
-      return
+      console.error('Error fetching events:', error)
+    } else {
+      setEvents(data || [])
     }
-
-    setEvent(data)
-    trackPageView('event', data.id)
     setLoading(false)
   }
 
-  const checkFollowStatus = async () => {
-    if (!event || !user) return
+  const calculateEventCounts = () => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
 
-    const { data } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', user.id)
-      .eq('entity_type', 'event')
-      .eq('entity_id', event.id)
-      .single()
+    let baseEvents = events
 
-    setIsFollowing(!!data)
-  }
-
-  const checkRSVPStatus = async () => {
-    if (!event || !user) return
-
-    const { data } = await supabase
-      .from('event_rsvps')
-      .select('status')
-      .eq('user_id', user.id)
-      .eq('event_id', event.id)
-      .single()
-
-    if (data) {
-      setRsvpStatus(data.status)
+    // Apply search and type filters first
+    if (searchQuery) {
+      baseEvents = baseEvents.filter(event =>
+        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.event_artists?.some(ea => 
+          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
     }
-  }
 
-  const fetchRSVPCount = async () => {
-    if (!event) return
-
-    const { count } = await supabase
-      .from('event_rsvps')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_id', event.id)
-      .eq('status', 'going')
-
-    setRsvpCount(count || 0)
-  }
-
-  const handleFollow = async () => {
-    if (!user || !event) return
-
-    setFollowLoading(true)
-    try {
-      if (isFollowing) {
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('entity_type', 'event')
-          .eq('entity_id', event.id)
-      } else {
-        await supabase
-          .from('follows')
-          .insert({
-            follower_id: user.id,
-            entity_type: 'event',
-            entity_id: event.id
-          })
-      }
-      setIsFollowing(!isFollowing)
-    } catch (error) {
-      console.error('Error following event:', error)
-    } finally {
-      setFollowLoading(false)
+    if (selectedTypes.length > 0) {
+      baseEvents = baseEvents.filter(event =>
+        event.event_types?.some(type => selectedTypes.includes(type))
+      )
     }
-  }
 
-  const handleRSVP = async (status: 'going' | 'interested' | 'not_going') => {
-    if (!user || !event) return
-
-    setRsvpLoading(true)
-    try {
-      if (rsvpStatus) {
-        // Update existing RSVP
-        await supabase
-          .from('event_rsvps')
-          .update({ status })
-          .eq('user_id', user.id)
-          .eq('event_id', event.id)
-      } else {
-        // Create new RSVP
-        await supabase
-          .from('event_rsvps')
-          .insert({
-            user_id: user.id,
-            event_id: event.id,
-            status
-          })
-      }
-      setRsvpStatus(status)
-      fetchRSVPCount() // Refresh count
-    } catch (error) {
-      console.error('Error updating RSVP:', error)
-    } finally {
-      setRsvpLoading(false)
+    const counts = {
+      all: baseEvents.length,
+      today: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }).length,
+      week: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < weekFromNow
+      }).length,
+      month: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < monthFromNow
+      }).length
     }
+
+    setEventCounts(counts)
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return {
-      date: date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit'
+  const filterEvents = () => {
+    let filtered = events
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.event_artists?.some(ea => 
+          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+    }
+
+    // Type filter
+    if (selectedTypes.length > 0) {
+      filtered = filtered.filter(event =>
+        event.event_types?.some(type => selectedTypes.includes(type))
+      )
+    }
+
+    // Date filter
+    if (dateFilter !== 'all') {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.event_date)
+        
+        switch (dateFilter) {
+          case 'today':
+            return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+          case 'week':
+            const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+            return eventDate >= today && eventDate < weekFromNow
+          case 'month':
+            const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
+            return eventDate >= today && eventDate < monthFromNow
+          default:
+            return true
+        }
       })
     }
+
+    setFilteredEvents(filtered)
   }
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: event?.title,
-          text: event?.description,
-          url: window.location.href
-        })
-      } catch (error) {
-        console.log('Error sharing:', error)
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    )
+  }
+
+  const clearFilters = () => {
+    setSelectedTypes([])
+    setDateFilter('all')
+    setSearchQuery('')
+  }
+
+  const activeFiltersCount = selectedTypes.length + (dateFilter !== 'all' ? 1 : 0)
+
+  // Group events by date for mobile view
+  const groupEventsByDate = (events: Event[]) => {
+    const grouped: { [key: string]: Event[] } = {}
+    
+    events.forEach(event => {
+      const eventDate = new Date(event.event_date)
+      const dateKey = eventDate.toDateString()
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = []
       }
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-    }
+      grouped[dateKey].push(event)
+    })
+    
+    // Sort events within each date by start time
+    Object.keys(grouped).forEach(dateKey => {
+      grouped[dateKey].sort((a, b) => 
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+      )
+    })
+    
+    return grouped
   }
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </Layout>
-    )
-  }
-
-  if (!event) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Event not found</h1>
-            <button
-              onClick={() => navigate('/events')}
-              className="text-blue-600 hover:text-blue-700"
-            >
-              Back to Events
-            </button>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
-
-  const eventDate = formatDate(event.event_date)
+  const groupedEvents = groupEventsByDate(filteredEvents)
+  const sortedDateKeys = Object.keys(groupedEvents).sort((a, b) => 
+    new Date(a).getTime() - new Date(b).getTime()
+  )
 
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
-          <div className="flex items-center justify-between p-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex space-x-2">
+          <div className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search events..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               <button
-                onClick={handleShare}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
               >
-                <Share2 size={20} />
+                <Filter size={16} />
+                <span className="text-sm">Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
               </button>
-              {user && (
-                <button
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                  className={`p-2 rounded-full transition-colors ${
-                    isFollowing 
-                      ? 'bg-red-50 text-red-600' 
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} />
-                </button>
-              )}
             </div>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* Hero Image */}
-          <div className="aspect-[16/9] lg:aspect-[21/9] relative overflow-hidden">
-            {event.image_url ? (
-              <img
-                src={event.image_url}
-                alt={event.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Calendar size={64} className="text-white opacity-80" />
-              </div>
-            )}
-            
-            {/* Desktop Actions Overlay */}
-            <div className="hidden lg:block absolute top-6 right-6">
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleShare}
-                  className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
-                >
-                  <Share2 size={20} />
-                </button>
-                {user && (
+        {/* Mobile Filter Drawer */}
+        {showFilters && (
+          <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
+              <div className="p-6 pb-24">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
                   <button
-                    onClick={handleFollow}
-                    disabled={followLoading}
-                    className={`p-3 rounded-full backdrop-blur-sm transition-colors ${
-                      isFollowing 
-                        ? 'bg-red-500/20 text-red-600' 
-                        : 'bg-white/20 text-white hover:bg-white/30'
-                    }`}
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                   >
-                    <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} />
+                    <X size={20} />
                   </button>
-                )}
+                </div>
+                
+                {/* Date Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">When</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'all', label: 'All Upcoming', count: eventCounts.all },
+                      { value: 'today', label: 'Today', count: eventCounts.today },
+                      { value: 'week', label: 'This Week', count: eventCounts.week },
+                      { value: 'month', label: 'This Month', count: eventCounts.month }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setDateFilter(option.value as any)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          dateFilter === option.value
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="font-medium">{option.label}</div>
+                        <div className="text-xs opacity-75">{option.count} events</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Event Types Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {EVENT_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => toggleType(type)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getEventTypeColor(event.event_type)}`}>
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Content */}
-          <div className="bg-white lg:rounded-t-3xl lg:-mt-8 relative z-10 p-6 lg:p-8">
-            {/* Desktop Back Button */}
-            <div className="hidden lg:block mb-6">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft size={16} className="mr-2" />
-                Back
-              </button>
-            </div>
-
-            {/* Event Header */}
-            <div className="mb-8">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2">
-                    {event.title}
-                  </h1>
-                  <div className="flex items-center space-x-4 text-gray-600">
-                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                      {event.event_type}
-                    </span>
-                    {event.ticket_price && (
-                      <span className="text-green-600 font-semibold">
-                        ${event.ticket_price}
-                      </span>
-                    )}
-                  </div>
-                </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          {/* Desktop Header */}
+          <div className="hidden lg:block mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Events Directory</h1>
+                <p className="text-gray-600 mt-2">Discover amazing upcoming events</p>
               </div>
-
-              {/* Event Details Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-4">
-                  <div className="flex items-center text-gray-700">
-                    <Calendar size={20} className="mr-3 text-gray-400" />
-                    <div>
-                      <div className="font-medium">{eventDate.date}</div>
-                      <div className="text-sm text-gray-500">{eventDate.time}</div>
-                    </div>
-                  </div>
-
-                  {event.venue && (
-                    <div className="flex items-start text-gray-700">
-                      <MapPin size={20} className="mr-3 text-gray-400 mt-0.5" />
-                      <div>
-                        <div className="font-medium">{event.venue.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {event.venue.address}, {event.venue.city}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {event.event_artists && event.event_artists.length > 0 && (
-                    <div className="flex items-center text-gray-700">
-                      <Star size={20} className="mr-3 text-gray-400" />
-                      <div>
-                        <div className="font-medium">
-                          {event.event_artists.map(ea => ea.artist.name).join(', ')}
-                        </div>
-                        {event.event_artists[0]?.artist.genre && (
-                          <div className="text-sm text-gray-500">{event.event_artists[0].artist.genre}</div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {event.capacity && (
-                    <div className="flex items-center text-gray-700">
-                      <Users size={20} className="mr-3 text-gray-400" />
-                      <div>
-                        <div className="font-medium">Capacity: {event.capacity}</div>
-                        {rsvpCount > 0 && (
-                          <div className="text-sm text-gray-500">{rsvpCount} people going</div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Ticket/Action Section */}
-                <div className="lg:pl-8">
-                  {/* RSVP Buttons */}
-                  {user && (
-                    <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Will you attend?</p>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleRSVP('going')}
-                          disabled={rsvpLoading}
-                          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                            rsvpStatus === 'going'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          <Check size={16} className="inline mr-1" />
-                          Going
-                        </button>
-                        <button
-                          onClick={() => handleRSVP('interested')}
-                          disabled={rsvpLoading}
-                          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                            rsvpStatus === 'interested'
-                              ? 'bg-yellow-500 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          <Star size={16} className="inline mr-1" />
-                          Interested
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {event.ticket_url ? (
-                    <a
-                      href={event.ticket_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center mb-4"
-                    >
-                      Get Tickets
-                      <ExternalLink size={16} className="ml-2" />
-                    </a>
-                  ) : (
-                    <div className="w-full bg-gray-100 text-gray-500 py-4 px-6 rounded-xl text-center mb-4">
-                      Tickets not available online
-                    </div>
-                  )}
-
-                  {/* Quick Links */}
-                  <div className="space-y-2">
-                    {event.venue && (
-                      <a
-                        href={`/venues/${event.venue.slug}`}
-                        className="block text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        View Venue Details →
-                      </a>
-                    )}
-                    {event.event_artists && event.event_artists.length > 0 && (
-                      <a
-                        href={`/artists/${event.event_artists[0].artist.slug}`}
-                        className="block text-blue-600 hover:text-blue-700 text-sm font-medium"
-                      >
-                        View Artist Profile →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Venue Section */}
-            {event.venue && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Venue</h2>
-                <a
-                  href={`/venues/${event.venue.slug}`}
-                  className="block bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors"
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
                 >
-                  <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-blue-600 rounded-xl flex items-center justify-center mr-4">
-                      {event.venue.image_url ? (
-                        <img
-                          src={event.venue.image_url}
-                          alt={event.venue.name}
-                          className="w-full h-full object-cover rounded-xl"
-                        />
-                      ) : (
-                        <MapPin size={24} className="text-white" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{event.venue.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {event.venue.address}, {event.venue.city}
-                      </p>
-                      {event.venue.capacity && (
-                        <p className="text-sm text-gray-500">Capacity: {event.venue.capacity}</p>
-                      )}
-                    </div>
-                  </div>
-                </a>
-              </div>
-            )}
+                  <X size={16} />
+                  <span>Clear Filters</span>
+                </button>
+              )}
+            </div>
 
-            {/* Featured Artists Section */}
-            {event.event_artists && event.event_artists.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Featured Artists</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {event.event_artists.map((eventArtist) => (
-                    <a
-                      key={eventArtist.artist.id}
-                      href={`/artists/${eventArtist.artist.slug}`}
-                      className="block bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors"
+            <div className="flex space-x-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search events..."
+                  )}
+
+          {/* Filters */}
+          <div className="hidden lg:block mb-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
+              
+              {/* Date Filter */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-3">When</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'all', label: 'All Upcoming', count: eventCounts.all },
+                    { value: 'today', label: 'Today', count: eventCounts.today },
+                    { value: 'week', label: 'This Week', count: eventCounts.week },
+                    { value: 'month', label: 'This Month', count: eventCounts.month }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setDateFilter(option.value as any)}
+                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        dateFilter === option.value
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
                     >
-                      <div className="flex items-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mr-4">
-                          {eventArtist.artist.image_url ? (
-                            <img
-                              src={eventArtist.artist.image_url}
-                              alt={eventArtist.artist.name}
-                              className="w-full h-full object-cover rounded-xl"
-                            />
-                          ) : (
-                            <Music size={24} className="text-white" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <h3 className="font-semibold text-gray-900">{eventArtist.artist.name}</h3>
-                            {eventArtist.is_featured && (
-                              <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                Featured
-                              </span>
-                            )}
-                            {eventArtist.artist.verified && (
-                              <Star size={14} className="ml-2 text-blue-500" />
-                            )}
-                          </div>
-                          {eventArtist.artist.genre && (
-                            <p className="text-sm text-gray-600">{eventArtist.artist.genre}</p>
-                          )}
-                        </div>
+                      <div>
+                        <span>{option.label}</span>
+                        <span className="ml-2 text-xs opacity-75">({option.count})</span>
                       </div>
-                    </a>
+                    </button>
                   ))}
                 </div>
               </div>
-            )}
-            {/* Description */}
-            {event.description && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">About This Event</h2>
-                <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {event.description}
-                  </p>
+
+              {/* Event Types Filter */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
+                <div className="flex flex-wrap gap-2">
+                  {EVENT_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => toggleType(type)}
+                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        selectedTypes.includes(type)
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-
-            {/* Reviews Section */}
-            <ReviewSection entityType="event" entityId={event.id} />
+            </div>
           </div>
+
+          {/* Results */}
+          <div className="mb-4">
+            <p className="text-gray-600">
+              {loading ? 'Loading...' : `${filteredEvents.length} event${filteredEvents.length !== 1 ? 's' : ''} found`}
+            </p>
+          </div>
+
+          {/* Events Grid */}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              {/* Mobile Layout - Date Grouped */}
+              <div className="lg:hidden space-y-6">
+                {sortedDateKeys.map((dateKey) => {
+                  const date = new Date(dateKey)
+                  const dayNumber = date.getDate()
+                  const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+                  
+                  return (
+                    <div key={dateKey} className="space-y-3">
+                      {/* Date Header */}
+                      <div className="flex items-center space-x-4 px-4">
+                        <div className="text-center">
+                          <div className="text-xs text-gray-500 font-medium">{monthName}</div>
+                          <div className="text-2xl font-bold text-gray-900">{dayNumber}</div>
+                        </div>
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                        <div className="text-sm text-gray-500 font-medium">
+                          {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                        </div>
+                      </div>
+                      
+                      {/* Events for this date */}
+                      <div className="space-y-3 px-4">
+                        {groupedEvents[dateKey].map((event) => (
+                          <MobileEventCard key={event.id} event={event} />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              
+              {/* Desktop Layout - Grid */}
+              <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {!loading && filteredEvents.length === 0 && (
+            <div className="text-center py-12">
+              <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
+              <p className="text-gray-600">Try adjusting your search or filters</p>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
   )
 }
+                  {event.ticket_url && (
