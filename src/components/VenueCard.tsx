@@ -110,7 +110,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue, onFollow, variant =
         
         <div className="p-6">
           <h3 
-            className="text-xl font-bold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-3"
+            className="text-xl font-bold font-oswald text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-3"
             onClick={handleClick}
           >
             {venue.name}
@@ -209,7 +209,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue, onFollow, variant =
       
       <div className="p-4">
         <h3 
-          className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-2 line-clamp-2"
+          className="font-semibold font-oswald text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-2 line-clamp-2"
           onClick={handleClick}
         >
           {venue.name}

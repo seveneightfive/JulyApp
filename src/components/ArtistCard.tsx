@@ -114,7 +114,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onFollow, varian
         
         <div className="p-6">
           <h3 
-            className="text-xl font-bold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-2"
+            className="text-xl font-bold font-oswald text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-2"
             onClick={handleClick}
           >
             {artist.name}
@@ -178,7 +178,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onFollow, varian
       
       <div className="p-4">
         <h3 
-          className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-2 line-clamp-1"
+          className="font-semibold font-oswald text-gray-900 hover:text-blue-600 cursor-pointer transition-colors mb-2 line-clamp-1"
           onClick={handleClick}
         >
           {artist.name}

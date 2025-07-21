@@ -34,7 +34,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
-      <header className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-50">
+      <header className="lg:hidden bg-black border-b border-gray-800 sticky top-0 z-50">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <a href="/" className="flex items-center">
@@ -45,20 +45,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
             </a>
             <div className="flex items-center space-x-3">
-              <button className="p-2 text-gray-600">
-                <Search size={20} />
-              </button>
-              <button className="p-2 text-gray-600">
+              <button className="p-2 text-white">
                 <Bell size={20} />
               </button>
               {user ? (
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#FFCE03] rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
                 </div>
               ) : (
                 <button 
                   onClick={() => openAuthModal('signin')}
-                  className="text-sm font-medium text-black hover:bg-[#FFCE03] hover:text-black px-3 py-2 rounded-lg transition-colors"
+                  className="text-sm font-medium text-white hover:bg-[#FFCE03] hover:text-black px-3 py-2 rounded-lg transition-colors"
                 >
                   Sign In
                 </button>
