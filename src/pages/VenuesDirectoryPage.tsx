@@ -118,6 +118,67 @@ export const VenuesDirectoryPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Mobile Filter Drawer */}
+        {showFilters && (
+          <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                {/* Venue Types Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Venue Types</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {VENUE_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => toggleType(type)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          selectedTypes.includes(type)
+                            ? 'bg-teal-600 text-white border-teal-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Neighborhood Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Neighborhood</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {NEIGHBORHOODS.map((neighborhood) => (
+                      <button
+                        key={neighborhood}
+                        onClick={() => setSelectedNeighborhood(selectedNeighborhood === neighborhood ? '' : neighborhood)}
+                        className={`flex items-center justify-center p-3 rounded-lg border transition-colors ${
+                          selectedNeighborhood === neighborhood
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <MapPin size={14} className="mr-2" />
+                        <span className="text-sm">{neighborhood}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">
@@ -152,7 +213,7 @@ export const VenuesDirectoryPage: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block mb-6`}>
+          <div className="hidden lg:block mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
               

@@ -14,6 +14,12 @@ export const EventsDirectoryPage: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
+  const [eventCounts, setEventCounts] = useState<Record<string, number>>({
+    all: 0,
+    today: 0,
+    week: 0,
+    month: 0
+  })
 
   useEffect(() => {
     trackPageView('events-directory')
@@ -22,6 +28,7 @@ export const EventsDirectoryPage: React.FC = () => {
 
   useEffect(() => {
     filterEvents()
+    calculateEventCounts()
   }, [events, searchQuery, selectedTypes, dateFilter])
 
   const fetchEvents = async () => {
@@ -44,6 +51,51 @@ export const EventsDirectoryPage: React.FC = () => {
       setEvents(data || [])
     }
     setLoading(false)
+  }
+
+  const calculateEventCounts = () => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
+
+    let baseEvents = events
+
+    // Apply search and type filters first
+    if (searchQuery) {
+      baseEvents = baseEvents.filter(event =>
+        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.event_artists?.some(ea => 
+          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+    }
+
+    if (selectedTypes.length > 0) {
+      baseEvents = baseEvents.filter(event =>
+        event.event_types?.some(type => selectedTypes.includes(type))
+      )
+    }
+
+    const counts = {
+      all: baseEvents.length,
+      today: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }).length,
+      week: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < weekFromNow
+      }).length,
+      month: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < monthFromNow
+      }).length
+    }
+
+    setEventCounts(counts)
   }
 
   const filterEvents = () => {
@@ -145,6 +197,72 @@ export const EventsDirectoryPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Mobile Filter Drawer */}
+        {showFilters && (
+          <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                {/* Date Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">When</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'all', label: 'All Upcoming', count: eventCounts.all },
+                      { value: 'today', label: 'Today', count: eventCounts.today },
+                      { value: 'week', label: 'This Week', count: eventCounts.week },
+                      { value: 'month', label: 'This Month', count: eventCounts.month }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setDateFilter(option.value as any)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          dateFilter === option.value
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="font-medium">{option.label}</div>
+                        <div className="text-xs opacity-75">{option.count} events</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Event Types Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {EVENT_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => toggleType(type)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          selectedTypes.includes(type)
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">
@@ -179,7 +297,7 @@ export const EventsDirectoryPage: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block mb-6`}>
+          <div className="hidden lg:block mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
               
@@ -188,10 +306,10 @@ export const EventsDirectoryPage: React.FC = () => {
                 <h4 className="font-medium text-gray-700 mb-3">When</h4>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { value: 'all', label: 'All Upcoming' },
-                    { value: 'today', label: 'Today' },
-                    { value: 'week', label: 'This Week' },
-                    { value: 'month', label: 'This Month' }
+                    { value: 'all', label: 'All Upcoming', count: eventCounts.all },
+                    { value: 'today', label: 'Today', count: eventCounts.today },
+                    { value: 'week', label: 'This Week', count: eventCounts.week },
+                    { value: 'month', label: 'This Month', count: eventCounts.month }
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -202,7 +320,10 @@ export const EventsDirectoryPage: React.FC = () => {
                           : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
-                      {option.label}
+                      <div>
+                        <span>{option.label}</span>
+                        <span className="ml-2 text-xs opacity-75">({option.count})</span>
+                      </div>
                     </button>
                   ))}
                 </div>

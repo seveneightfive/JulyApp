@@ -145,6 +145,91 @@ export const ArtistsDirectoryPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Mobile Filter Drawer */}
+        {showFilters && (
+          <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                {/* Artist Type Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Artist Type</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ARTIST_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedType(selectedType === type ? '' : type)}
+                        className={`flex items-center justify-center space-x-2 p-3 rounded-lg border transition-colors ${
+                          selectedType === type
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {getTypeIcon(type)}
+                        <span className="text-sm">{type}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Musical Genres Filter (only show if Musician is selected) */}
+                {selectedType === 'Musician' && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-700 mb-3">Musical Genres</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {MUSICAL_GENRES.map((genre) => (
+                        <button
+                          key={genre}
+                          onClick={() => toggleGenre(genre)}
+                          className={`p-3 rounded-lg border text-sm transition-colors ${
+                            selectedGenres.includes(genre)
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {genre}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Visual Mediums Filter (only show if Visual is selected) */}
+                {selectedType === 'Visual' && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-700 mb-3">Visual Mediums</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {VISUAL_MEDIUMS.map((medium) => (
+                        <button
+                          key={medium}
+                          onClick={() => toggleMedium(medium)}
+                          className={`p-3 rounded-lg border text-sm transition-colors ${
+                            selectedMediums.includes(medium)
+                              ? 'bg-teal-600 text-white border-teal-600'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {medium}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">
@@ -179,7 +264,7 @@ export const ArtistsDirectoryPage: React.FC = () => {
           </div>
 
           {/* Filters */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block mb-6`}>
+          <div className="hidden lg:block mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
               

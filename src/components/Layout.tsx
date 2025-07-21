@@ -37,7 +37,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <header className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">EventHub</h1>
+            <a href="/" className="flex items-center">
+              <img 
+                src="https://assets.softr-files.com/applications/06852328-a343-4027-96ff-d4aff30169c8/assets/3bd00154-80ee-4525-8f04-dd8c544af6e7.png" 
+                alt="EventHub" 
+                className="h-8 w-auto"
+              />
+            </a>
             <div className="flex items-center space-x-3">
               <button className="p-2 text-gray-600">
                 <Search size={20} />
@@ -67,7 +73,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-100">
           <div className="flex flex-1 flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-6">
-              <h1 className="text-2xl font-bold text-gray-900">EventHub</h1>
+              <a href="/" className="flex items-center">
+                <img 
+                  src="https://assets.softr-files.com/applications/06852328-a343-4027-96ff-d4aff30169c8/assets/3bd00154-80ee-4525-8f04-dd8c544af6e7.png" 
+                  alt="EventHub" 
+                  className="h-8 w-auto"
+                />
+              </a>
             </div>
             
             {/* Search */}
@@ -165,8 +177,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50">
-        <div className="grid grid-cols-5 h-16">
-          {navigation.map((item) => (
+        <div className="grid grid-cols-4 h-16">
+          {navigation.filter(item => item.name !== 'Home').map((item) => (
             <a
               key={item.name}
               href={item.href}
@@ -176,10 +188,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="text-xs font-medium">{item.name}</span>
             </a>
           ))}
-          <button className="flex flex-col items-center justify-center space-y-1 text-gray-600 hover:text-blue-600 transition-colors">
-            <Plus size={20} />
-            <span className="text-xs font-medium">Create</span>
-          </button>
         </div>
       </nav>
 
