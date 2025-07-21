@@ -343,27 +343,9 @@ export const EventsDirectoryPage: React.FC = () => {
                       key={option.value}
                       onClick={() => setDateFilter(option.value as any)}
                       className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-            <div className="flex items-center space-x-2">
-              <span className={`text-xs px-3 py-1 rounded-full font-medium ${getEventTypeColor(event.event_type)}`}>
-                {event.event_type}
-              </span>
-              {user && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleRSVP(rsvpStatus === 'going' ? 'not_going' : 'going')
-                  }}
-                  disabled={rsvpLoading}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    rsvpStatus === 'going'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {rsvpStatus === 'going' ? 'Going' : 'RSVP'}
-                </button>
-              )}
-            </div>
+                        dateFilter === option.value
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <div>
@@ -445,44 +427,18 @@ export const EventsDirectoryPage: React.FC = () => {
               
               {/* Desktop Layout - Grid */}
               <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <div className="flex items-center space-x-2">
-            <span className={`text-xs px-2 py-1 rounded font-medium ${getEventTypeColor(event.event_type)}`}>
-              {event.event_type}
-            </span>
-            {event.ticket_price && (
-              <span className="text-green-600 font-semibold text-xs">${event.ticket_price}</span>
-            )}
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            {user && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRSVP(rsvpStatus === 'going' ? 'not_going' : 'going')
-                }}
-                disabled={rsvpLoading}
-                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                  rsvpStatus === 'going'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {rsvpStatus === 'going' ? 'Going' : 'RSVP'}
-              </button>
-            )}
-            <button
-              onClick={handleClick}
-              className="text-blue-600 hover:text-blue-700 text-xs font-medium"
-            >
-              View →
-            </button>
-          </div>
+                {filteredEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </Layout>
   )
 }
+
 const getEventTypeColor = (eventType: string) => {
   const colors: { [key: string]: string } = {
     'Art': 'bg-pink-500 text-white',
