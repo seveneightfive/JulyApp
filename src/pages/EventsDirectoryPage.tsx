@@ -409,6 +409,9 @@ export const EventsDirectoryPage: React.FC = () => {
                           <div className="text-2xl font-bold text-gray-900">{dayNumber}</div>
                         </div>
                         <div className="flex-1 h-px bg-gray-200"></div>
+                        <div className="text-sm text-gray-500 font-medium">
+                          {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                        </div>
                       </div>
                       
                       {/* Events for this date */}

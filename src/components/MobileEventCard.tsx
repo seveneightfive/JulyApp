@@ -29,14 +29,42 @@ export const MobileEventCard: React.FC<MobileEventCardProps> = ({ event }) => {
     })
   }
 
+  const getEventTypeAbbreviation = (eventType: string) => {
+    const abbreviations: { [key: string]: string } = {
+      'Art': 'ART',
+      'Entertainment': 'ENT',
+      'Lifestyle': 'LIFE',
+      'Local Flavor': 'FLAVOR',
+      'Live Music': 'MUSIC',
+      'Party For A Cause': 'CAUSE',
+      'Community / Cultural': 'COMM',
+      'Shop Local': 'SHOP'
+    }
+    return abbreviations[eventType] || eventType.substring(0, 4).toUpperCase()
+  }
+
+  const getEventTypeColor = (eventType: string) => {
+    const colors: { [key: string]: string } = {
+      'Art': 'bg-pink-500',
+      'Entertainment': 'bg-purple-500',
+      'Lifestyle': 'bg-blue-500',
+      'Local Flavor': 'bg-green-500',
+      'Live Music': 'bg-teal-500',
+      'Party For A Cause': 'bg-orange-500',
+      'Community / Cultural': 'bg-indigo-500',
+      'Shop Local': 'bg-yellow-500'
+    }
+    return colors[eventType] || 'bg-gray-500'
+  }
+
   return (
     <div 
-      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer relative"
+      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer relative"
       onClick={handleClick}
     >
       <div className="flex">
         {/* Event Image - Facebook cover proportions (1.91:1) */}
-        <div className="w-20 h-[42px] flex-shrink-0 relative overflow-hidden rounded-l-xl">
+        <div className="w-20 h-[42px] flex-shrink-0 relative overflow-hidden rounded-l-lg">
           {event.image_url ? (
             <img
               src={event.image_url}
@@ -83,8 +111,8 @@ export const MobileEventCard: React.FC<MobileEventCardProps> = ({ event }) => {
         {/* Event Type Tag - Rotated on right side */}
         {event.event_type && (
           <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 rotate-90 origin-center">
-            <div className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
-              {event.event_type}
+            <div className={`${getEventTypeColor(event.event_type)} text-white px-2 py-1 rounded text-xs font-medium whitespace-nowrap`}>
+              {getEventTypeAbbreviation(event.event_type)}
             </div>
           </div>
         )}
