@@ -289,7 +289,7 @@ export const EventsDirectoryPage: React.FC = () => {
                         key={type}
                         onClick={() => toggleType(type)}
                         className={`p-3 rounded-lg border text-sm transition-colors ${
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getEventTypeColor(event.event_type)}`}>
+                          selectedTypes.includes(type)
                             ? 'bg-purple-600 text-white border-purple-600'
                             : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                         }`}
@@ -331,7 +331,11 @@ export const EventsDirectoryPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search events..."
-                  )}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Filters */}
           <div className="hidden lg:block mb-6">
@@ -455,4 +459,3 @@ export const EventsDirectoryPage: React.FC = () => {
     </Layout>
   )
 }
-                  {event.ticket_url && (
