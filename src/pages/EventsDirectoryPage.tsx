@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Search, Filter, Calendar, X } from 'lucide-react'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
+import { MobileEventCard } from '../components/MobileEventCard'
 import { supabase, type Event, trackPageView } from '../lib/supabase'
 
 const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
@@ -161,6 +162,35 @@ export const EventsDirectoryPage: React.FC = () => {
   }
 
   const activeFiltersCount = selectedTypes.length + (dateFilter !== 'all' ? 1 : 0)
+
+  // Group events by date for mobile view
+  const groupEventsByDate = (events: Event[]) => {
+    const grouped: { [key: string]: Event[] } = {}
+    
+    events.forEach(event => {
+      const eventDate = new Date(event.event_date)
+      const dateKey = eventDate.toDateString()
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = []
+      }
+      grouped[dateKey].push(event)
+    })
+    
+    // Sort events within each date by start time
+    Object.keys(grouped).forEach(dateKey => {
+      grouped[dateKey].sort((a, b) => 
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+      )
+    })
+    
+    return grouped
+  }
+
+  const groupedEvents = groupEventsByDate(filteredEvents)
+  const sortedDateKeys = Object.keys(groupedEvents).sort((a, b) => 
+    new Date(a).getTime() - new Date(b).getTime()
+  )
 
   return (
     <Layout>
@@ -362,11 +392,43 @@ export const EventsDirectoryPage: React.FC = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+            <>
+              {/* Mobile Layout - Date Grouped */}
+              <div className="lg:hidden space-y-6">
+                {sortedDateKeys.map((dateKey) => {
+                  const date = new Date(dateKey)
+                  const dayNumber = date.getDate()
+                  const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+                  
+                  return (
+                    <div key={dateKey} className="space-y-3">
+                      {/* Date Header */}
+                      <div className="flex items-center space-x-4 px-4">
+                        <div className="text-center">
+                          <div className="text-xs text-gray-500 font-medium">{monthName}</div>
+                          <div className="text-2xl font-bold text-gray-900">{dayNumber}</div>
+                        </div>
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                      </div>
+                      
+                      {/* Events for this date */}
+                      <div className="space-y-3 px-4">
+                        {groupedEvents[dateKey].map((event) => (
+                          <MobileEventCard key={event.id} event={event} />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              
+              {/* Desktop Layout - Grid */}
+              <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </>
           )}
 
           {!loading && filteredEvents.length === 0 && (
