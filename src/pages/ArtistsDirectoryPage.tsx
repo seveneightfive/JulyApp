@@ -150,7 +150,7 @@ export const ArtistsDirectoryPage: React.FC = () => {
           <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
             <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
-              <div className="p-6">
+              <div className="p-6 pb-24">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
                   <button

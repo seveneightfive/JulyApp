@@ -176,18 +176,24 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-50">
         <div className="grid grid-cols-4 h-16">
-          {navigation.filter(item => item.name !== 'Home').map((item) => (
+          {navigation.filter(item => item.name !== 'Home').map((item) => {
+            const isActive = window.location.pathname === item.href || 
+              (item.href !== '/' && window.location.pathname.startsWith(item.href))
+            return (
             <a
               key={item.name}
               href={item.href}
-              className="flex flex-col items-center justify-center space-y-1 text-gray-600 hover:text-blue-600 transition-colors"
+              className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
+                isActive ? 'text-[#FFCE03]' : 'text-white hover:text-[#FFCE03]'
+              }`}
             >
               <item.icon size={20} />
               <span className="text-xs font-medium">{item.name}</span>
             </a>
-          ))}
+          )
+          })}
         </div>
       </nav>
 
