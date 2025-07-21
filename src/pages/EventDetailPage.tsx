@@ -5,22 +5,9 @@ import { EventCard } from '../components/EventCard'
 import { MobileEventCard } from '../components/MobileEventCard'
 import { supabase, type Event, trackPageView } from '../lib/supabase'
 
-const getEventTypeColor = (eventType: string) => {
-  const colors: { [key: string]: string } = {
-    'Art': 'bg-pink-100 text-pink-800',
-    'Entertainment': 'bg-purple-100 text-purple-800',
-    'Lifestyle': 'bg-blue-100 text-blue-800',
-    'Local Flavor': 'bg-green-100 text-green-800',
-    'Live Music': 'bg-teal-100 text-teal-800',
-    'Party For A Cause': 'bg-orange-100 text-orange-800',
-    'Community / Cultural': 'bg-indigo-100 text-indigo-800',
-    'Shop Local': 'bg-yellow-100 text-yellow-800'
-  }
-  return colors[eventType] || 'bg-gray-100 text-gray-800'
-}
 const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
 
-export const EventsDirectoryPage: React.FC = () => {
+export const EventDetailPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
