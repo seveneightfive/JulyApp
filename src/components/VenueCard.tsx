@@ -78,18 +78,6 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
         )}
 
         <div className="flex items-center space-x-4 text-gray-500">
-          {venue.phone && (
-            <div className="flex items-center space-x-1">
-              <Phone size={14} />
-              <span className="text-xs">Phone</span>
-            </div>
-          )}
-          {venue.website && (
-            <div className="flex items-center space-x-1">
-              <Globe size={14} />
-              <span className="text-xs">Website</span>
-            </div>
-          )}
           {venue.email && (
             <div className="flex items-center space-x-1">
               <Mail size={14} />

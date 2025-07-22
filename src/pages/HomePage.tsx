@@ -80,7 +80,6 @@ export const HomePage: React.FC = () => {
       const { data: artistsData } = await supabase
         .from('artists')
         .select('*')
-        .eq('verified', true)
         .order('created_at', { ascending: false })
         .limit(6)
 
