@@ -1,187 +1,450 @@
-import { createClient } from '@supabase/supabase-js'
+import React, { useState, useEffect } from 'react'
+import { Search, Filter, Calendar, X } from 'lucide-react'
+import { Layout } from '../components/Layout'
+import { EventCard } from '../components/EventCard'
+import { MobileEventCard } from '../components/MobileEventCard'
+import { supabase, type Event, trackPageView } from '../lib/supabase'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
+export const EventsDirectoryPage: React.FC = () => {
+  const [events, setEvents] = useState<Event[]>([])
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+  const [showFilters, setShowFilters] = useState(false)
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
+  const [eventCounts, setEventCounts] = useState<Record<string, number>>({
+    all: 0,
+    today: 0,
+    week: 0,
+    month: 0
+  })
+
+  useEffect(() => {
+    trackPageView('events-directory')
+    fetchEvents()
+  }, [])
+
+  useEffect(() => {
+    filterEvents()
+    calculateEventCounts()
+  }, [events, searchQuery, selectedTypes, dateFilter])
+
+  const fetchEvents = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        venue:venues(*),
+        event_artists(
+          artist:artists(*),
+          is_featured
+        )
+      `)
+      .gte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching events:', error)
+    } else {
+      setEvents(data || [])
+    }
+    setLoading(false)
   }
-})
 
-// Types
-export interface Profile {
-  id: string
-  username: string
-  full_name?: string
-  avatar_url?: string
-  bio?: string
-  website?: string
-  created_at: string
-  updated_at: string
-}
+  const calculateEventCounts = () => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
 
-export interface Venue {
-  id: string
-  slug: string
-  name: string
-  description?: string
-  address: string
-  city: string
-  state?: string
-  country: string
-  phone?: string
-  email?: string
-  website?: string
-  capacity?: number
-  venue_type: string
-  venue_types?: string[]
-  neighborhood?: string
-  image_url?: string
-  created_by?: string
-  created_at: string
-  updated_at: string
-}
+    let baseEvents = events
 
-export interface Artist {
-  id: string
-  slug: string
-  name: string
-  tagline?: string
-  bio?: string
-  genre?: string
-  artist_type: 'Musician' | 'Visual' | 'Performance' | 'Literary'
-  musical_genres?: string[]
-  visual_mediums?: string[]
-  website?: string
-  avatar_url?: string
-  artist_website?: string
-  social_facebook?: string
-  artist_spotify?: string
-  artist_youtube?: string
-  artist_email?: string
-  social_links?: Record<string, string>
-  image_url?: string
-  verified: boolean
-  audio_file_url?: string
-  audio_title?: string
-  video_url?: string
-  video_title?: string
-  purchase_link?: string
-  created_by?: string
-  created_at: string
-  updated_at: string
-}
+    // Apply search and type filters first
+    if (searchQuery) {
+      baseEvents = baseEvents.filter(event =>
+        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.event_artists?.some(ea => 
+          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+    }
 
-export interface Work {
-  id: string
-  title: string
-  image_url?: string
-  medium?: string
-  size?: string
-  artist_id: string
-  price?: number
-  about?: string
-  location?: string
-  exhibit?: string
-  event_id?: string
-  venue_id?: string
-  user_id: string
-  is_for_sale: boolean
-  is_in_collection: boolean
-  created_at: string
-  updated_at: string
-  artist?: Artist
-  user?: Profile
-}
+    if (selectedTypes.length > 0) {
+      baseEvents = baseEvents.filter(event =>
+        event.event_types?.some(type => selectedTypes.includes(type))
+      )
+    }
 
-export interface Event {
-  id: string
-  slug: string
-  title: string
-  description?: string
+    const counts = {
+      all: baseEvents.length,
+      today: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      }).length,
+      week: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < weekFromNow
+      }).length,
+      month: baseEvents.filter(event => {
+        const eventDate = new Date(event.event_date)
+        return eventDate >= today && eventDate < monthFromNow
+      }).length
+    }
+
+    setEventCounts(counts)
+  }
+
+  const filterEvents = () => {
+    let filtered = events
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.event_artists?.some(ea => 
+          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      )
+    }
+
+    // Type filter
+    if (selectedTypes.length > 0) {
+      filtered = filtered.filter(event =>
+        event.event_types?.some(type => selectedTypes.includes(type))
+      )
+    }
+
+    // Date filter
+    if (dateFilter !== 'all') {
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.event_date)
+        
+        switch (dateFilter) {
+          case 'today':
+            return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+          case 'week':
+            const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+            return eventDate >= today && eventDate < weekFromNow
+          case 'month':
+            const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
+            return eventDate >= today && eventDate < monthFromNow
+          default:
+            return true
+        }
+      })
+    }
+
+    setFilteredEvents(filtered)
+  }
+
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev =>
+      prev.includes(type)
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    )
+  }
+
+  const clearFilters = () => {
+    setSelectedTypes([])
+    setDateFilter('all')
+    setSearchQuery('')
+  }
+
+  const activeFiltersCount = selectedTypes.length + (dateFilter !== 'all' ? 1 : 0)
+
+  // Group events by date for mobile view
+  const groupEventsByDate = (events: Event[]) => {
+    const grouped: { [key: string]: Event[] } = {}
+    
+    events.forEach(event => {
+      const eventDate = new Date(event.event_date)
+      const dateKey = eventDate.toDateString()
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = []
+      }
+      grouped[dateKey].push(event)
+    })
+    
+    // Sort events within each date by start time
+    Object.keys(grouped).forEach(dateKey => {
+      grouped[dateKey].sort((a, b) => 
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+      )
+    })
+    
+    return grouped
+  }
+
+  const groupedEvents = groupEventsByDate(filteredEvents)
+  const sortedDateKeys = Object.keys(groupedEvents).sort((a, b) => 
+    new Date(a).getTime() - new Date(b).getTime()
+  )
+
+  return (
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
+          <div className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search events..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
+              >
+                <Filter size={16} />
+                <span className="text-sm">Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Filter Drawer */}
+        {showFilters && (
+          <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
+              <div className="p-6 pb-24">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                {/* Date Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">When</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'all', label: 'All Upcoming', count: eventCounts.all },
+                      { value: 'today', label: 'Today', count: eventCounts.today },
+                      { value: 'week', label: 'This Week', count: eventCounts.week },
+                      { value: 'month', label: 'This Month', count: eventCounts.month }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setDateFilter(option.value as any)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          dateFilter === option.value
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="font-medium">{option.label}</div>
+                        <div className="text-xs opacity-75">{option.count} events</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Event Types Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {EVENT_TYPES.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => toggleType(type)}
+                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                          selectedTypes.includes(type)
+                            ? 'bg-purple-600 text-white border-purple-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          {/* Desktop Header */}
+          <div className="hidden lg:block mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Events Directory</h1>
+                <p className="text-gray-600 mt-2">Discover amazing upcoming events</p>
+              </div>
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+                >
+                  <X size={16} />
+                  <span>Clear Filters</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex space-x-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search events..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="hidden lg:block mb-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
+              
+              {/* Date Filter */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-3">When</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'all', label: 'All Upcoming', count: eventCounts.all },
+                    { value: 'today', label: 'Today', count: eventCounts.today },
+                    { value: 'week', label: 'This Week', count: eventCounts.week },
+                    { value: 'month', label: 'This Month', count: eventCounts.month }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setDateFilter(option.value as any)}
+                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        dateFilter === option.value
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div>
+                        <span>{option.label}</span>
+                        <span className="ml-2 text-xs opacity-75">({option.count})</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Event Types Filter */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
+                <div className="flex flex-wrap gap-2">
+                  {EVENT_TYPES.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => toggleType(type)}
+                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                        selectedTypes.includes(type)
+                          ? 'bg-purple-600 text-white border-purple-600'
+                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="mb-4">
+            <p className="text-gray-600">
+              {loading ? 'Loading...' : `${filteredEvents.length} event${filteredEvents.length !== 1 ? 's' : ''} found`}
+            </p>
+          </div>
+
+          {/* Events Grid */}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              {/* Mobile Layout - Date Grouped */}
+              <div className="lg:hidden space-y-6">
+                {sortedDateKeys.map((dateKey) => {
+                  const date = new Date(dateKey)
+                  const dayNumber = date.getDate()
+                  const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+                  
+                  return (
+                    <div key={dateKey} className="space-y-3">
+                      {/* Date Header */}
+                      <div className="flex items-center space-x-4 px-4">
+                        <div className="text-center">
+                          <div className="text-xs text-gray-500 font-medium">{monthName}</div>
+                          <div className="text-2xl font-bold text-gray-900">{dayNumber}</div>
+                        </div>
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                        <div className="text-sm text-gray-500 font-medium">
+                          {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                        </div>
+                      </div>
+                      
+                      {/* Events for this date */}
+                      <div className="space-y-3 px-4">
+                        {groupedEvents[dateKey].map((event) => (
+                          <MobileEventCard key={event.id} event={event} />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              
+              {/* Desktop Layout - Grid */}
+              <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
   event_date: string
   end_date?: string
-  venue_id?: string
-  ticket_price?: number
-  ticket_url?: string
-  image_url?: string
-  event_type: string
-  event_types?: string[]
-  capacity?: number
-  created_by?: string
-  created_at: string
-  updated_at: string
-  venue?: Venue
-  artists?: Artist[]
-  event_artists?: { artist: Artist; is_featured: boolean }[]
-}
+  event_start_time?: string
+  event_end_time?: string
+          )}
 
-export interface Review {
-  id: string
-  user_id: string
-  entity_type: 'event' | 'artist' | 'venue'
-  entity_id: string
-  rating: number
-  title?: string
-  content?: string
-  created_at: string
-  updated_at: string
-  profile?: Profile
-}
-
-export interface Follow {
-  id: string
-  follower_id: string
-  entity_type: 'artist' | 'venue' | 'user'
-  entity_id: string
-  created_at: string
-}
-
-export interface Announcement {
-  id: string
-  title: string
-  content: string
-  entity_type?: 'event' | 'artist' | 'venue' | 'user'
-  entity_id?: string
-  priority: number
-  active: boolean
-  expires_at?: string
-  created_by?: string
-  created_at: string
-}
-
-export interface PageView {
-  id: string
-  page_type: string
-  page_id?: string
-  user_id?: string
-  ip_address?: string
-  user_agent?: string
-  referrer?: string
-  created_at: string
-}
-
-export interface EventRSVP {
-  id: string
-  user_id: string
-  event_id: string
-  status: 'going' | 'interested' | 'not_going'
-  created_at: string
-  profile?: Profile
-}
-
-// Helper functions
-export const trackPageView = async (pageType: string, pageId?: string) => {
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  await supabase.from('page_views').insert({
-    page_type: pageType,
-    page_id: pageId,
-    user_id: user?.id,
-    user_agent: navigator.userAgent,
-    referrer: document.referrer
-  })
+          {!loading && filteredEvents.length === 0 && (
+            <div className="text-center py-12">
+              <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
+              <p className="text-gray-600">Try adjusting your search or filters</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Layout>
+  )
 }
