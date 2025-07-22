@@ -83,6 +83,15 @@ export const ArtistsDirectoryPage: React.FC = () => {
         ? prev.filter(t => t !== type)
         : [...prev, type]
     )
+    
+    // Clear secondary filters when changing artist type
+    if (!selectedTypes.includes(type)) {
+      if (type === 'Musician') {
+        setSelectedGenres([])
+      } else if (type === 'Visual') {
+        setSelectedMediums([])
+      }
+    }
   }
 
   const toggleGenre = (genre: string) => {
@@ -180,44 +189,48 @@ export const ArtistsDirectoryPage: React.FC = () => {
                 </div>
 
                 {/* Musical Genres Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Musical Genres</h4>
-                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                    {MUSICAL_GENRES.map((genre) => (
-                      <button
-                        key={genre}
-                        onClick={() => toggleGenre(genre)}
-                        className={`p-2 rounded-lg border text-xs transition-colors ${
-                          selectedGenres.includes(genre)
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        {genre}
-                      </button>
-                    ))}
+                {selectedTypes.includes('Musician') && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-700 mb-3">Musical Genres</h4>
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                      {MUSICAL_GENRES.map((genre) => (
+                        <button
+                          key={genre}
+                          onClick={() => toggleGenre(genre)}
+                          className={`p-2 rounded-lg border text-xs transition-colors ${
+                            selectedGenres.includes(genre)
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {genre}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Visual Mediums Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Visual Mediums</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {VISUAL_MEDIUMS.map((medium) => (
-                      <button
-                        key={medium}
-                        onClick={() => toggleMedium(medium)}
-                        className={`p-2 rounded-lg border text-xs transition-colors ${
-                          selectedMediums.includes(medium)
-                            ? 'bg-green-600 text-white border-green-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        {medium}
-                      </button>
-                    ))}
+                {selectedTypes.includes('Visual') && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-700 mb-3">Visual Mediums</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {VISUAL_MEDIUMS.map((medium) => (
+                        <button
+                          key={medium}
+                          onClick={() => toggleMedium(medium)}
+                          className={`p-2 rounded-lg border text-xs transition-colors ${
+                            selectedMediums.includes(medium)
+                              ? 'bg-green-600 text-white border-green-600'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {medium}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -282,44 +295,48 @@ export const ArtistsDirectoryPage: React.FC = () => {
               </div>
 
               {/* Musical Genres Filter */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Musical Genres</h4>
-                <div className="flex flex-wrap gap-2">
-                  {MUSICAL_GENRES.map((genre) => (
-                    <button
-                      key={genre}
-                      onClick={() => toggleGenre(genre)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-                        selectedGenres.includes(genre)
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      {genre}
-                    </button>
-                  ))}
+              {selectedTypes.includes('Musician') && (
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Musical Genres</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {MUSICAL_GENRES.map((genre) => (
+                      <button
+                        key={genre}
+                        onClick={() => toggleGenre(genre)}
+                        className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                          selectedGenres.includes(genre)
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {genre}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Visual Mediums Filter */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Visual Mediums</h4>
-                <div className="flex flex-wrap gap-2">
-                  {VISUAL_MEDIUMS.map((medium) => (
-                    <button
-                      key={medium}
-                      onClick={() => toggleMedium(medium)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-                        selectedMediums.includes(medium)
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      {medium}
-                    </button>
-                  ))}
+              {selectedTypes.includes('Visual') && (
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Visual Mediums</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {VISUAL_MEDIUMS.map((medium) => (
+                      <button
+                        key={medium}
+                        onClick={() => toggleMedium(medium)}
+                        className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                          selectedMediums.includes(medium)
+                            ? 'bg-green-600 text-white border-green-600'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {medium}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
