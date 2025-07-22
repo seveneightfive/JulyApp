@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Search, Menu, X, User, Calendar, Music, MapPin, Home, Star, Plus, Bell, Heart, BarChart3 } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { AuthModal } from './AuthModal'
 
@@ -13,6 +14,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const { user, profile, signOut } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -31,6 +34,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     setAuthMode(mode)
     setAuthModalOpen(true)
   }
+
+  const isActiveRoute = (href: string) => {
+    return location.pathname === href || 
+           (href !== '/' && location.pathname.startsWith(href))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -39,36 +48,34 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-100">
           <div className="flex flex-1 flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-3">
-              <a href="/" className="flex items-center">
+              <Link to="/" className="flex items-center">
                 <img 
                   src="/785 Logo Valentine.png" 
                   alt="seveneightfive" 
                   className="h-8 w-auto"
                 />
-              </a>
+              </Link>
             </div>
             
             {/* Navigation */}
             <nav className="mt-6 flex-1 px-3 space-y-1">
               {navigation.map((item) => (
-                <a
+                <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.href}
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    window.location.pathname === item.href || 
-                    (item.href !== '/' && window.location.pathname.startsWith(item.href))
+                    isActiveRoute(item.href)
                       ? 'bg-black text-[#FFCE03]'
                       : 'text-gray-700 hover:bg-black hover:text-white'
                   }`}
                 >
                   <item.icon className={`mr-3 h-5 w-5 ${
-                    window.location.pathname === item.href || 
-                    (item.href !== '/' && window.location.pathname.startsWith(item.href))
+                    isActiveRoute(item.href)
                       ? 'text-[#FFCE03]'
                       : 'text-gray-400 group-hover:text-white'
                   }`} />
                   {item.name}
-                </a>
+                </Link>
               ))}
             </nav>
 
@@ -94,18 +101,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <a
-                      href="/profile"
+                    <Link
+                      to="/profile"
                       className="block text-sm text-gray-600 hover:text-gray-900"
                     >
                       Edit Profile
-                    </a>
-                    <a
-                      href="/dashboard"
+                    </Link>
+                    <Link
+                      to="/dashboard"
                       className="block text-sm text-gray-600 hover:text-gray-900"
                     >
                       Dashboard
-                    </a>
+                    </Link>
                   </div>
                   <button
                     onClick={signOut}
@@ -116,16 +123,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      openAuthModal('signin')
-                    }}
+                  <button
+                    onClick={() => openAuthModal('signin')}
                     className="block w-full text-center bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#FFCE03] hover:text-black transition-colors"
                   >
                     Sign In
-                  </a>
+                  </button>
                   <a
                     href="mailto:seveneightfive@gmail.com"
                     className="block w-full text-center bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
@@ -148,8 +151,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-50 h-16">
         <div className="grid grid-cols-5 h-16">
           {/* Logo */}
-          <a
-            href="/"
+          <Link
+            to="/"
             className="flex flex-col items-center justify-center space-y-1 text-white hover:text-[#FFCE03] transition-colors"
           >
             <img 
@@ -158,22 +161,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               className="h-6 w-auto"
             />
             <span className="text-xs font-medium">Home</span>
-          </a>
+          </Link>
           
           {navigation.filter(item => item.name !== 'Home' && item.name !== 'Dashboard').map((item) => {
-            const isActive = window.location.pathname === item.href || 
-              (item.href !== '/' && window.location.pathname.startsWith(item.href))
+            const isActive = isActiveRoute(item.href)
             return (
-            <a
+            <Link
               key={item.name}
-              href={item.href}
+              to={item.href}
               className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
                 isActive ? 'text-[#FFCE03]' : 'text-white hover:text-[#FFCE03]'
               }`}
             >
               <item.icon size={20} />
               <span className="text-xs font-medium">{item.name}</span>
-            </a>
+            </Link>
           )
           })}
           
@@ -181,7 +183,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <button
             onClick={() => {
               if (user) {
-                window.location.href = '/dashboard'
+                navigate('/dashboard')
               } else {
                 openAuthModal('signin')
               }
