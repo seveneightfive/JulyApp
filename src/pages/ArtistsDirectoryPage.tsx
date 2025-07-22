@@ -6,7 +6,7 @@ import { supabase, type Event, trackPageView } from '../lib/supabase'
 
 const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
 
-export const EventsDirectoryPage: React.FC = () => {
+export const ArtistsDirectoryPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -295,7 +295,7 @@ export const EventsDirectoryPage: React.FC = () => {
           <div className="hidden lg:block mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-               <h1 className="text-3xl font-bold font-oswald text-gray-900">Artists Directory</h1>
+                <h1 className="text-3xl font-bold text-gray-900">Events Directory</h1>
                 <p className="text-gray-600 mt-2">Discover amazing upcoming events</p>
               </div>
               {activeFiltersCount > 0 && (
