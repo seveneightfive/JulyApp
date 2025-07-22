@@ -6,7 +6,7 @@ import { supabase, type Event, trackPageView } from '../lib/supabase'
 
 const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
 
-export const EventsDirectoryPage: React.FC = () => {
+export const VenuesDirectoryPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -116,7 +116,7 @@ export const EventsDirectoryPage: React.FC = () => {
     // Type filter
     if (selectedTypes.length > 0) {
       filtered = filtered.filter(event =>
-        selectedTypes.includes(venue.venue_type)
+        event.event_types?.some(type => selectedTypes.includes(type))
       )
     }
 
