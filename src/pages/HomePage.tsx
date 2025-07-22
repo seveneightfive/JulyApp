@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Filter, Calendar, X } from 'lucide-react'
 import { Layout } from '../components/Layout'
-import { AuthModal } from '../components/AuthModal'
 import { EventCard } from '../components/EventCard'
 import { supabase, type Event, trackPageView } from '../lib/supabase'
 
 const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
 
-export const EventsDirectoryPage: React.FC = () => {
-  const [authModalOpen, setAuthModalOpen] = useState(false)
+export const HomePage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([])
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -435,7 +433,7 @@ export const EventsDirectoryPage: React.FC = () => {
             </>
           )}
 
-          {filteredEvents.length === 0 && !loading && (
+          {!loading && filteredEvents.length === 0 && (
             <div className="text-center py-12">
               <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
@@ -444,12 +442,6 @@ export const EventsDirectoryPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      <AuthModal 
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        mode="signup"
-      />
     </Layout>
   )
 }
