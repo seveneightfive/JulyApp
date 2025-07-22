@@ -459,16 +459,38 @@ export const EventsDirectoryPage: React.FC = () => {
 const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
   const formatTime = () => {
     if (event.event_start_time) {
-      const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)
-      return dummyDate.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
+      try {
+        const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)
+        if (isNaN(dummyDate.getTime())) {
+          return null
+        }
+        return dummyDate.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        })
+      } catch (error) {
+        return null
+      }
     }
     return null
   }
 
+  const formatEventDate = () => {
+    try {
+      const eventDate = new Date(event.start_date)
+      if (isNaN(eventDate.getTime())) {
+        return 'Invalid Date'
+      }
+      return eventDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch (error) {
+      return 'Invalid Date'
+    }
+  }
   const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
   const otherArtists = event.event_artists?.filter(ea => !ea.is_featured) || []
   const allArtists = [...featuredArtists, ...otherArtists]
@@ -503,10 +525,10 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
 
           {/* Time and Venue */}
           <div className="space-y-1 text-xs text-gray-600">
-            {formatTime() && (
+            {event.start_date && (
               <div className="flex items-center">
                 <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
-                <span>{formatTime()}</span>
+                <span>{formatEventDate()}{formatTime() ? ` • ${formatTime()}` : ''}</span>
               </div>
             )}
             
