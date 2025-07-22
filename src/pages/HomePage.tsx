@@ -209,10 +209,6 @@ export const HomePage: React.FC = () => {
                           </div>
                         )}
                       </div>
-
-                        {/* DEBUG: Display event slug */}
-                      {/* DEBUG: Display event slug */}
-                      <p className="text-white text-xs mt-2">Debug Slug: {event.slug}</p>
                       <Link
                         to={`/events/${starredEvents[currentSlide]?.slug}`}
                         className="inline-block bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
