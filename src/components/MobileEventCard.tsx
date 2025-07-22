@@ -227,20 +227,15 @@ export const EventsDirectoryPage: React.FC = () => {
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
               >
-        {/* Image or Date Badge */}
-        <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
-          {event.image_url ? (
-            <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="bg-blue-50 rounded-lg p-3 text-center w-full h-full flex flex-col justify-center">
-              <div className="text-xs font-medium text-blue-600 uppercase">
-                {new Date(event.event_date).toLocaleDateString('en-US', { month: 'short' })}
-              </div>
-              <div className="text-lg font-bold text-blue-900">
-                {new Date(event.event_date).getDate()}
-              </div>
+                <Filter size={16} />
+                {activeFiltersCount > 0 && (
+                  <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Mobile Filter Drawer */}
@@ -320,7 +315,7 @@ export const EventsDirectoryPage: React.FC = () => {
               {activeFiltersCount > 0 && (
                 <button
                   onClick={clearFilters}
-                  className={`inline-block text-xs px-2 py-1 rounded-full ${getEventTypeColor(type)}`}
+                  className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <X size={16} />
                   <span>Clear Filters</span>
