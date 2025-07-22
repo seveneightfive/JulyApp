@@ -24,10 +24,19 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
   }
 
   const formatTime = () => {
-    return eventDate.toLocaleTimeString('en-US', { 
+    if (event.event_start_time) {
+      const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)
+      return dummyDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'America/Chicago'
+      })
+    }
+    return eventDate.toLocaleTimeString('en-US', {
       hour: 'numeric', 
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     })
   }
 
@@ -57,10 +66,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         {/* Date Badge */}
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm">
           <div className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-            {eventDate.toLocaleDateString('en-US', { month: 'short' })}
+            {new Date(event.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' })}
           </div>
           <div className="text-lg font-bold text-gray-900">
-            {eventDate.getDate()}
+            {new Date(event.event_date + 'T12:00:00').getDate()}
           </div>
         </div>
       </div>
