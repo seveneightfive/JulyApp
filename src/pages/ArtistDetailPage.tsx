@@ -604,7 +604,7 @@ export const ArtistDetailPage: React.FC = () => {
 
         {/* Sticky Featured Track - Musicians only */}
         {artist.artist_type === 'Musician' && artist.audio_file_url && artist.audio_title && (
-          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg z-40 lg:left-64">
+          <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg z-40 lg:left-64">
             <div className="max-w-7xl mx-auto px-4 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">

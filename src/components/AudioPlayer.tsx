@@ -82,7 +82,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 lg:left-64">
+    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 lg:left-64">
       <audio ref={audioRef} src={audioUrl} />
       
       <div className="max-w-7xl mx-auto px-4 py-3">
