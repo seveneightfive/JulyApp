@@ -435,13 +435,13 @@ export const EventsDirectoryPage: React.FC = () => {
             </>
           )}
 
-          <button
-            onClick={() => setAuthModalOpen(true)}
+          {filteredEvents.length === 0 && !loading && (
+            <div className="text-center py-12">
               <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
               <p className="text-gray-600">Try adjusting your search or filters</p>
             </div>
-          </button>
+          )}
         </div>
       </div>
 
