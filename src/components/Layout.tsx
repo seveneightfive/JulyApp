@@ -33,25 +33,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="lg:hidden bg-black border-b border-gray-800 sticky top-0 z-50">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <a href="/" className="flex items-center">
-              <img 
-                src="https://assets.softr-files.com/applications/06852328-a343-4027-96ff-d4aff30169c8/assets/3bd00154-80ee-4525-8f04-dd8c544af6e7.png" 
-                alt="EventHub" 
-                className="h-8 w-auto"
-              />
-            </a>
-            <div className="flex items-center space-x-3">
-              <button className="p-2 text-white">
-                <Bell size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
@@ -160,7 +141,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-50">
-        <div className="grid grid-cols-4 h-16">
+        <div className="grid grid-cols-5 h-16">
+          {/* Logo */}
+          <a
+            href="/"
+            className="flex flex-col items-center justify-center space-y-1 text-white hover:text-[#FFCE03] transition-colors"
+          >
+            <img 
+              src="https://assets.softr-files.com/applications/06852328-a343-4027-96ff-d4aff30169c8/assets/3bd00154-80ee-4525-8f04-dd8c544af6e7.png" 
+              alt="EventHub" 
+              className="h-6 w-auto"
+            />
+            <span className="text-xs font-medium">Home</span>
+          </a>
+          
           {navigation.filter(item => item.name !== 'Home' && item.name !== 'Dashboard').map((item) => {
             const isActive = window.location.pathname === item.href || 
               (item.href !== '/' && window.location.pathname.startsWith(item.href))
