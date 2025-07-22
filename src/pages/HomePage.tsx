@@ -208,6 +208,7 @@ export const HomePage: React.FC = () => {
                             <span>{event.venue.name}</span>
                           </div>
                         )}
+                      </div>
 
                         {/* DEBUG: Display event slug */}
                       {/* DEBUG: Display event slug */}
