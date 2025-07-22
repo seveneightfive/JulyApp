@@ -218,14 +218,14 @@ export const HomePage: React.FC = () => {
                       </div>
                       
                       <Link
-                        to={`/events/${event.slug}`}
+                        to={`/events/${starredEvents[currentSlide]?.slug}`}
                         className="inline-block bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
                       >
                         Learn More
                       </Link>
 
                       {/* DEBUG: Display event slug */}
-                      <p className="text-white text-xs mt-2">Debug Slug: {event.slug}</p>
+                      <p className="text-white text-xs mt-2">Debug Slug: {starredEvents[currentSlide]?.slug}</p>
                     </div>
                   </div>
                 </div>
