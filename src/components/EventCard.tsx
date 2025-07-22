@@ -85,7 +85,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <div className="flex items-center text-gray-600 mb-2">
           <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
           <span className="text-sm">
-            {formatDate()} at {formatTime()}
+            {formatTime()}
           </span>
         </div>
 
