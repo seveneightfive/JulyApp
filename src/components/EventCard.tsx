@@ -8,21 +8,6 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const eventDate = new Date(event.event_date)
-  const now = new Date()
-  const isToday = eventDate.toDateString() === now.toDateString()
-  const isTomorrow = eventDate.toDateString() === new Date(now.getTime() + 24 * 60 * 60 * 1000).toDateString()
-  
-  const formatDate = () => {
-    if (isToday) return 'Today'
-    if (isTomorrow) return 'Tomorrow'
-    return eventDate.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }
-
   const formatTime = () => {
     if (event.event_start_time) {
       const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)

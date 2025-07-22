@@ -48,18 +48,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <button className="p-2 text-white">
                 <Bell size={20} />
               </button>
-              {user ? (
-                <div className="w-8 h-8 bg-[#FFCE03] rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-              ) : (
-                <button 
-                  onClick={() => openAuthModal('signin')}
-                  className="text-sm font-medium text-white hover:bg-[#FFCE03] hover:text-black px-3 py-2 rounded-lg transition-colors"
-                >
-                  Sign In
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -149,16 +137,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               ) : (
                 <div className="space-y-2">
                   <a
-                    onClick={() => openAuthModal('signin')}
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      openAuthModal('signin')
+                    }}
                     className="block w-full text-center bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#FFCE03] hover:text-black transition-colors"
                   >
                     Sign In
-                  </a>
-                  <a
-                    onClick={() => openAuthModal('signup')}
-                    className="block w-full text-center border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                  >
-                    Sign Up
                   </a>
                 </div>
               )}
@@ -175,7 +161,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 z-50">
         <div className="grid grid-cols-4 h-16">
-          {navigation.filter(item => item.name !== 'Home').map((item) => {
+          {navigation.filter(item => item.name !== 'Home' && item.name !== 'Dashboard').map((item) => {
             const isActive = window.location.pathname === item.href || 
               (item.href !== '/' && window.location.pathname.startsWith(item.href))
             return (
@@ -191,6 +177,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </a>
           )
           })}
+          
+          {/* Profile/Dashboard Button */}
+          <button
+            onClick={() => {
+              if (user) {
+                window.location.href = '/dashboard'
+              } else {
+                openAuthModal('signin')
+              }
+            }}
+            className="flex flex-col items-center justify-center space-y-1 text-white hover:text-[#FFCE03] transition-colors"
+          >
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+              user ? 'bg-[#FFCE03]' : 'bg-gray-600'
+            }`}>
+              <User size={16} className={user ? 'text-black' : 'text-white'} />
+            </div>
+            <span className="text-xs font-medium">{user ? 'Dashboard' : 'Sign In'}</span>
+          </button>
         </div>
       </nav>
 

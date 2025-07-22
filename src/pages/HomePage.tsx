@@ -1,453 +1,369 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, Calendar, X } from 'lucide-react'
+import { Calendar, MapPin, Clock, ChevronLeft, ChevronRight, Star, Music, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
-import { supabase, type Event, trackPageView } from '../lib/supabase'
-
-const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
+import { ArtistCard } from '../components/ArtistCard'
+import { VenueCard } from '../components/VenueCard'
+import { supabase, type Event, type Artist, type Venue, trackPageView } from '../lib/supabase'
 
 export const HomePage: React.FC = () => {
-  const [events, setEvents] = useState<Event[]>([])
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([])
+  const [starredEvents, setStarredEvents] = useState<Event[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [featuredArtists, setFeaturedArtists] = useState<Artist[]>([])
+  const [featuredVenues, setFeaturedVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
-  const [showFilters, setShowFilters] = useState(false)
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
-  const [eventCounts, setEventCounts] = useState<Record<string, number>>({
-    all: 0,
-    today: 0,
-    week: 0,
-    month: 0
-  })
+  const [currentSlide, setCurrentSlide] = useState(0)
 
   useEffect(() => {
-    trackPageView('events-directory')
-    fetchEvents()
+    trackPageView('home')
+    fetchHomeData()
   }, [])
 
   useEffect(() => {
-    filterEvents()
-    calculateEventCounts()
-  }, [events, searchQuery, selectedTypes, dateFilter])
-
-  const fetchEvents = async () => {
-    // Get current date in local timezone, start of day
-    const now = new Date()
-    const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const oneDayAgo = new Date(localToday.getTime() - 24 * 60 * 60 * 1000)
-    
-    const { data, error } = await supabase
-      .from('events')
-      .select(`
-        *,
-        venue:venues(*),
-        event_artists(
-          artist:artists(*),
-          is_featured
-        )
-      `)
-      .gte('event_date', oneDayAgo.toISOString().split('T')[0])
-      .order('event_date', { ascending: true })
-
-    if (error) {
-      console.error('Error fetching events:', error)
-    } else {
-      setEvents(data || [])
+    if (starredEvents.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % starredEvents.length)
+      }, 5000)
+      return () => clearInterval(interval)
     }
-    setLoading(false)
-  }
+  }, [starredEvents.length])
 
-  const calculateEventCounts = () => {
-    // Use local timezone for date calculations
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
-    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
-
-    let baseEvents = events
-
-    // Apply search and type filters first
-    if (searchQuery) {
-      baseEvents = baseEvents.filter(event =>
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.event_artists?.some(ea => 
-          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      )
-    }
-
-    if (selectedTypes.length > 0) {
-      baseEvents = baseEvents.filter(event =>
-        event.event_types?.some(type => selectedTypes.includes(type))
-      )
-    }
-
-    const counts = {
-      all: baseEvents.length,
-      today: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
-        return eventDate >= today && eventDate < tomorrow
-      }).length,
-      week: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
-        return eventDate >= today && eventDate < weekFromNow
-      }).length,
-      month: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
-        return eventDate >= today && eventDate < monthFromNow
-      }).length
-    }
-
-    setEventCounts(counts)
-  }
-
-  const filterEvents = () => {
-    let filtered = events
-
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.venue?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.event_artists?.some(ea => 
-          ea.artist.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      )
-    }
-
-    // Type filter
-    if (selectedTypes.length > 0) {
-      filtered = filtered.filter(event =>
-        event.event_types?.some(type => selectedTypes.includes(type))
-      )
-    }
-
-    // Date filter
-    if (dateFilter !== 'all') {
+  const fetchHomeData = async () => {
+    try {
+      // Get current date in local timezone, start of day
       const now = new Date()
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+      const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const oneDayAgo = new Date(localToday.getTime() - 24 * 60 * 60 * 1000)
       
-      filtered = filtered.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
-        
-        switch (dateFilter) {
-          case 'today':
-            return eventDate >= today && eventDate < tomorrow
-          case 'week':
-            const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-            return eventDate >= today && eventDate < weekFromNow
-          case 'month':
-            const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
-            return eventDate >= today && eventDate < monthFromNow
-          default:
-            return true
-        }
-      })
-    }
+      // Fetch starred events
+      const { data: starredData } = await supabase
+        .from('events')
+        .select(`
+          *,
+          venue:venues(*),
+          event_artists(
+            artist:artists(*),
+            is_featured
+          )
+        `)
+        .eq('star', true)
+        .gte('event_date', oneDayAgo.toISOString().split('T')[0])
+        .order('event_date', { ascending: true })
+        .limit(5)
 
-    setFilteredEvents(filtered)
+      if (starredData) {
+        setStarredEvents(starredData)
+      }
+
+      // Fetch upcoming events (non-starred)
+      const { data: upcomingData } = await supabase
+        .from('events')
+        .select(`
+          *,
+          venue:venues(*),
+          event_artists(
+            artist:artists(*),
+            is_featured
+          )
+        `)
+        .neq('star', true)
+        .gte('event_date', oneDayAgo.toISOString().split('T')[0])
+        .order('event_date', { ascending: true })
+        .limit(6)
+
+      if (upcomingData) {
+        setUpcomingEvents(upcomingData)
+      }
+
+      // Fetch featured artists (verified ones)
+      const { data: artistsData } = await supabase
+        .from('artists')
+        .select('*')
+        .eq('verified', true)
+        .order('created_at', { ascending: false })
+        .limit(6)
+
+      if (artistsData) {
+        setFeaturedArtists(artistsData)
+      }
+
+      // Fetch featured venues (random selection)
+      const { data: venuesData } = await supabase
+        .from('venues')
+        .select('*')
+        .not('image_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(6)
+
+      if (venuesData) {
+        setFeaturedVenues(venuesData)
+      }
+
+    } catch (error) {
+      console.error('Error fetching home data:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const toggleType = (type: string) => {
-    setSelectedTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % starredEvents.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + starredEvents.length) % starredEvents.length)
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
     )
   }
-
-  const clearFilters = () => {
-    setSelectedTypes([])
-    setDateFilter('all')
-    setSearchQuery('')
-  }
-
-  const activeFiltersCount = selectedTypes.length + (dateFilter !== 'all' ? 1 : 0)
-
-  // Group events by date for mobile view
-  const groupEventsByDate = (events: Event[]) => {
-    const grouped: { [key: string]: Event[] } = {}
-    
-    events.forEach(event => {
-      const eventDate = new Date(event.event_date + 'T00:00:00')
-      const dateKey = eventDate.toDateString()
-      
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = []
-      }
-      grouped[dateKey].push(event)
-    })
-    
-    // Sort events within each date by start time
-    Object.keys(grouped).forEach(dateKey => {
-      grouped[dateKey].sort((a, b) => 
-        new Date(a.event_date + 'T00:00:00').getTime() - new Date(b.event_date + 'T00:00:00').getTime()
-      )
-    })
-    
-    return grouped
-  }
-
-  const groupedEvents = groupEventsByDate(filteredEvents)
-  const sortedDateKeys = Object.keys(groupedEvents).sort((a, b) => 
-    new Date(a).getTime() - new Date(b).getTime()
-  )
 
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
-          <div className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search events..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
-              >
-                <Filter size={16} />
-                <span className="text-sm">Filters</span>
-                {activeFiltersCount > 0 && (
-                  <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Filter Drawer */}
-        {showFilters && (
-          <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
-            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
-            <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
-              <div className="p-6 pb-24">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-                  <button
-                    onClick={() => setShowFilters(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                
-                {/* Date Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">When</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { value: 'all', label: 'All Upcoming', count: eventCounts.all },
-                      { value: 'today', label: 'Today', count: eventCounts.today },
-                      { value: 'week', label: 'This Week', count: eventCounts.week },
-                      { value: 'month', label: 'This Month', count: eventCounts.month }
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setDateFilter(option.value as any)}
-                        className={`p-3 rounded-lg border text-sm transition-colors ${
-                          dateFilter === option.value
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="font-medium">{option.label}</div>
-                        <div className="text-xs opacity-75">{option.count} events</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Event Types Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {EVENT_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => toggleType(type)}
-                        className={`p-3 rounded-lg border text-sm transition-colors ${
-                          selectedTypes.includes(type)
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-          {/* Desktop Header */}
-          <div className="hidden lg:block mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-               <h1 className="text-3xl font-bold font-oswald text-gray-900">Events Directory</h1>
-                <p className="text-gray-600 mt-2">Discover amazing upcoming events</p>
-              </div>
-              {activeFiltersCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+        {/* Hero Section with Starred Events Slider */}
+        {starredEvents.length > 0 && (
+          <section className="relative h-[60vh] lg:h-[70vh] overflow-hidden">
+            <div className="relative w-full h-full">
+              {starredEvents.map((event, index) => (
+                <div
+                  key={event.id}
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    index === currentSlide ? 'opacity-100' : 'opacity-0'
+                  }`}
                 >
-                  <X size={16} />
-                  <span>Clear Filters</span>
-                </button>
-              )}
-            </div>
-
-            <div className="flex space-x-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search events..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="hidden lg:block mb-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
-              
-              {/* Date Filter */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">When</h4>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: 'all', label: 'All Upcoming', count: eventCounts.all },
-                    { value: 'today', label: 'Today', count: eventCounts.today },
-                    { value: 'week', label: 'This Week', count: eventCounts.week },
-                    { value: 'month', label: 'This Month', count: eventCounts.month }
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setDateFilter(option.value as any)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-                        dateFilter === option.value
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div>
-                        <span>{option.label}</span>
-                        <span className="ml-2 text-xs opacity-75">({option.count})</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Event Types Filter */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Event Types</h4>
-                <div className="flex flex-wrap gap-2">
-                  {EVENT_TYPES.map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => toggleType(type)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
-                        selectedTypes.includes(type)
-                          ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Results */}
-          <div className="mb-4">
-            <p className="text-gray-600">
-              {loading ? 'Loading...' : `${filteredEvents.length} event${filteredEvents.length !== 1 ? 's' : ''} found`}
-            </p>
-          </div>
-
-          {/* Events Grid */}
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : (
-            <>
-              {/* Mobile Layout - Date Grouped */}
-              <div className="lg:hidden space-y-6">
-                {sortedDateKeys.map((dateKey) => {
-                  const date = new Date(dateKey)
-                  const dayNumber = date.getDate()
-                  const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+                  {event.image_url ? (
+                    <img
+                      src={event.image_url}
+                      alt={event.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                      <Calendar size={120} className="text-white opacity-50" />
+                    </div>
+                  )}
                   
-                  return (
-                    <div key={dateKey} className="space-y-3">
-                      {/* Date Header */}
-                      <div className="flex items-center space-x-4 px-4">
-                        <div className="text-center">
-                          <div className="text-xs text-gray-500 font-medium">{monthName}</div>
-                          <div className="text-2xl font-bold text-gray-900">{dayNumber}</div>
-                        </div>
-                        <div className="flex-1 h-px bg-gray-200"></div>
-                        <div className="text-sm text-gray-500 font-medium">
-                          {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
-                        </div>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                  
+                  {/* Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-12">
+                    <div className="max-w-7xl mx-auto">
+                      <div className="flex items-center mb-4">
+                        <Star size={24} className="text-yellow-400 fill-current mr-3" />
+                        <span className="text-yellow-400 font-medium">Featured Event</span>
                       </div>
                       
-                      {/* Events for this date */}
-                      <div className="space-y-3 px-4">
-                        {groupedEvents[dateKey].map((event) => (
-                          <EventCard key={event.id} event={event} />
-                        ))}
+                      <h1 className="text-3xl lg:text-6xl font-bold font-oswald text-white mb-4 drop-shadow-lg">
+                        {event.title}
+                      </h1>
+                      
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-8 space-y-2 lg:space-y-0 text-white/90 mb-6">
+                        <div className="flex items-center">
+                          <Calendar size={20} className="mr-2" />
+                          <span className="font-medium">
+                            {new Date(event.event_date + 'T12:00:00').toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        
+                        {event.event_start_time && (
+                          <div className="flex items-center">
+                            <Clock size={20} className="mr-2" />
+                            <span>
+                              {new Date(`2000-01-01T${event.event_start_time}`).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {event.venue && (
+                          <div className="flex items-center">
+                            <MapPin size={20} className="mr-2" />
+                            <span>{event.venue.name}</span>
+                          </div>
+                        )}
                       </div>
+                      
+                      <Link
+                        to={`/events/${event.slug}`}
+                        className="inline-block bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                      >
+                        Learn More
+                      </Link>
                     </div>
-                  )
-                })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Navigation Arrows */}
+            {starredEvents.length > 1 && (
+              <>
+                <button
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+            
+            {/* Dots Indicator */}
+            {starredEvents.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                {starredEvents.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`w-3 h-3 rounded-full transition-all ${
+                      index === currentSlide ? 'bg-white' : 'bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+          {/* Upcoming Events Section */}
+          {upcomingEvents.length > 0 && (
+            <section className="mb-12">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl lg:text-3xl font-bold font-oswald text-gray-900">
+                  Upcoming Events
+                </h2>
+                <Link
+                  to="/events"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View All Events →
+                </Link>
               </div>
               
-              {/* Desktop Layout - Grid */}
-              <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {filteredEvents.map((event) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {upcomingEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </div>
-            </>
+            </section>
           )}
 
-          {!loading && filteredEvents.length === 0 && (
-            <div className="text-center py-12">
-              <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No events found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters</p>
-            </div>
+          {/* Featured Artists Section */}
+          {featuredArtists.length > 0 && (
+            <section className="mb-12">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl lg:text-3xl font-bold font-oswald text-gray-900">
+                  Featured Artists
+                </h2>
+                <Link
+                  to="/artists"
+                  className="text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  Discover More Artists →
+                </Link>
+              </div>
+              
+              {/* Desktop Grid */}
+              <div className="hidden lg:grid grid-cols-3 gap-6">
+                {featuredArtists.slice(0, 3).map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} />
+                ))}
+              </div>
+              
+              {/* Mobile Horizontal Scroll */}
+              <div className="lg:hidden overflow-x-auto">
+                <div className="flex space-x-4 pb-4">
+                  {featuredArtists.map((artist) => (
+                    <div key={artist.id} className="flex-shrink-0 w-64">
+                      <ArtistCard artist={artist} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
           )}
+
+          {/* Featured Venues Section */}
+          {featuredVenues.length > 0 && (
+            <section className="mb-12">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl lg:text-3xl font-bold font-oswald text-gray-900">
+                  Featured Venues
+                </h2>
+                <Link
+                  to="/venues"
+                  className="text-teal-600 hover:text-teal-700 font-medium"
+                >
+                  Explore More Venues →
+                </Link>
+              </div>
+              
+              {/* Desktop Grid */}
+              <div className="hidden lg:grid grid-cols-3 gap-6">
+                {featuredVenues.slice(0, 3).map((venue) => (
+                  <VenueCard key={venue.id} venue={venue} />
+                ))}
+              </div>
+              
+              {/* Mobile Horizontal Scroll */}
+              <div className="lg:hidden overflow-x-auto">
+                <div className="flex space-x-4 pb-4">
+                  {featuredVenues.map((venue) => (
+                    <div key={venue.id} className="flex-shrink-0 w-64">
+                      <VenueCard venue={venue} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Call to Action Section */}
+          <section className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 lg:p-12 text-center text-white">
+            <h2 className="text-2xl lg:text-3xl font-bold font-oswald mb-4">
+              Join the Community
+            </h2>
+            <p className="text-lg mb-8 opacity-90">
+              Discover amazing events, connect with local artists, and explore unique venues in your area.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link
+                to="/events"
+                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Browse Events
+              </Link>
+              <Link
+                to="/artists"
+                className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+              >
+                Meet Artists
+              </Link>
+            </div>
+          </section>
         </div>
       </div>
     </Layout>

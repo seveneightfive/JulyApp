@@ -422,9 +422,9 @@ export const EventsDirectoryPage: React.FC = () => {
                       </div>
                       
                       {/* Events for this date */}
-                      <div className="space-y-3 px-4">
+                      <div className="space-y-3">
                         {groupedEvents[dateKey].map((event) => (
-                          <EventCard key={event.id} event={event} />
+                          <MobileEventCard key={event.id} event={event} />
                         ))}
                       </div>
                     </div>
@@ -451,5 +451,98 @@ export const EventsDirectoryPage: React.FC = () => {
         </div>
       </div>
     </Layout>
+  )
+}
+
+// Mobile Event Card Component with horizontal layout
+const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
+  const formatTime = () => {
+    if (event.event_start_time) {
+      const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)
+      return dummyDate.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    }
+    return null
+  }
+
+  const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
+  const otherArtists = event.event_artists?.filter(ea => !ea.is_featured) || []
+  const allArtists = [...featuredArtists, ...otherArtists]
+
+  return (
+    <Link 
+      to={`/events/${event.slug}`}
+      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden mx-4"
+    >
+      <div className="flex">
+        {/* Event Image - 16:9 aspect ratio */}
+        <div className="w-24 h-16 bg-gray-200 overflow-hidden flex-shrink-0">
+          {event.image_url ? (
+            <img
+              src={event.image_url}
+              alt={event.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-white opacity-50" />
+            </div>
+          )}
+        </div>
+
+        {/* Event Details */}
+        <div className="flex-1 p-3 min-w-0">
+          {/* Event Title */}
+          <h3 className="font-bold text-sm text-gray-900 mb-1 line-clamp-1 font-oswald">
+            {event.title}
+          </h3>
+
+          {/* Time and Venue */}
+          <div className="space-y-1 text-xs text-gray-600">
+            {formatTime() && (
+              <div className="flex items-center">
+                <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span>{formatTime()}</span>
+              </div>
+            )}
+            
+            {event.venue && (
+              <div className="flex items-center">
+                <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="truncate">{event.venue.name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Artists */}
+          {allArtists.length > 0 && (
+            <div className="mt-1">
+              <div className="flex flex-wrap gap-1">
+                {allArtists.slice(0, 2).map((eventArtist) => (
+                  <span
+                    key={eventArtist.artist.id}
+                    className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      eventArtist.is_featured
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {eventArtist.artist.name}
+                  </span>
+                ))}
+                {allArtists.length > 2 && (
+                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                    +{allArtists.length - 2}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
   )
 }
