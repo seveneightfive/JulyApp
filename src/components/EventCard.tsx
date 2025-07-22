@@ -26,7 +26,6 @@ const formatTimeOfDay = (timeString?: string): string => {
   if (!timeString) return ''
   
   try {
-    // Create a dummy date with the time (assuming Chicago timezone -5)
     const dummyDate = new Date(`2024-01-01T${timeString}`)
     return dummyDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -48,7 +47,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, variant = 'default'
 
   const formatDate = (dateString: string) => {
     try {
-      // Handle date-only strings by adding time component
       const date = new Date(dateString + 'T00:00:00')
       return date.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -72,107 +70,92 @@ export const EventCard: React.FC<EventCardProps> = ({ event, variant = 'default'
     return ''
   }
 
-  const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
   const allArtists = event.event_artists?.map(ea => ea.artist.name) || []
 
+  // Mobile-style horizontal layout for all variants
   return (
     <div
       onClick={handleClick}
-      className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden border border-gray-100 ${
-        variant === 'featured' ? 'ring-2 ring-blue-500' : ''
-      }`}
+      className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden border border-gray-100 p-4"
     >
-      {/* Event Image or Date Badge */}
-      <div className="relative h-48">
-        {event.image_url ? (
-          <img
-            src={event.image_url}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <div className="text-center text-white">
-              <Calendar size={32} className="mx-auto mb-2" />
-              <div className="text-sm font-medium">
-                {formatDate(event.event_date)}
+      <div className="flex items-center space-x-4">
+        {/* Date Badge or Image */}
+        <div className="flex-shrink-0">
+          {event.image_url ? (
+            <img
+              src={event.image_url}
+              alt={event.title}
+              className="w-16 h-16 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex flex-col items-center justify-center text-white">
+              <div className="text-xs font-medium">
+                {new Date(event.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
+              </div>
+              <div className="text-lg font-bold">
+                {new Date(event.event_date + 'T00:00:00').getDate()}
               </div>
             </div>
-          </div>
-        )}
-        
-        {/* Event Types */}
-        {event.event_types && event.event_types.length > 0 && (
-          <div className="absolute top-3 left-3">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getEventTypeColor(event.event_types[0])}`}>
-              {event.event_types[0]}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="p-4">
-        {/* Date and Time */}
-        <div className="flex items-center text-sm text-gray-600 mb-2">
-          <Calendar size={14} className="mr-1" />
-          <span>{formatDate(event.event_date)}</span>
-          {getTimeRange() && (
-            <>
-              <Clock size={14} className="ml-3 mr-1" />
-              <span>{getTimeRange()}</span>
-            </>
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-          {event.title}
-        </h3>
+        {/* Event Details */}
+        <div className="flex-1 min-w-0">
+          {/* Event Types */}
+          {event.event_types && event.event_types.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {event.event_types.slice(0, 2).map((type) => (
+                <span
+                  key={type}
+                  className={`px-2 py-1 rounded-full text-xs font-medium border ${getEventTypeColor(type)}`}
+                >
+                  {type}
+                </span>
+              ))}
+              {event.event_types.length > 2 && (
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                  +{event.event_types.length - 2}
+                </span>
+              )}
+            </div>
+          )}
 
-        {/* Venue */}
-        {event.venue && (
-          <div className="flex items-center text-sm text-gray-600 mb-2">
-            <MapPin size={14} className="mr-1 flex-shrink-0" />
-            <span className="truncate">{event.venue.name}</span>
-          </div>
-        )}
+          {/* Title */}
+          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
+            {event.title}
+          </h3>
 
-        {/* Artists */}
-        {allArtists.length > 0 && (
-          <div className="flex items-center text-sm text-gray-600 mb-3">
-            <Users size={14} className="mr-1 flex-shrink-0" />
-            <span className="truncate">
-              {allArtists.slice(0, 2).join(', ')}
-              {allArtists.length > 2 && ` +${allArtists.length - 2} more`}
-            </span>
-          </div>
-        )}
-
-        {/* Description */}
-        {event.description && variant !== 'compact' && (
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-            {event.description}
-          </p>
-        )}
-
-        {/* Additional Event Types */}
-        {event.event_types && event.event_types.length > 1 && (
-          <div className="flex flex-wrap gap-1">
-            {event.event_types.slice(1, 3).map((type) => (
-              <span
-                key={type}
-                className={`px-2 py-1 rounded-full text-xs font-medium border ${getEventTypeColor(type)}`}
-              >
-                {type}
-              </span>
-            ))}
-            {event.event_types.length > 3 && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                +{event.event_types.length - 3}
-              </span>
+          {/* Date and Time */}
+          <div className="flex items-center text-sm text-gray-600 mb-1">
+            <Calendar size={14} className="mr-1" />
+            <span>{formatDate(event.event_date)}</span>
+            {getTimeRange() && (
+              <>
+                <Clock size={14} className="ml-3 mr-1" />
+                <span>{getTimeRange()}</span>
+              </>
             )}
           </div>
-        )}
+
+          {/* Venue */}
+          {event.venue && (
+            <div className="flex items-center text-sm text-gray-600 mb-1">
+              <MapPin size={14} className="mr-1 flex-shrink-0" />
+              <span className="truncate">{event.venue.name}</span>
+            </div>
+          )}
+
+          {/* Artists */}
+          {allArtists.length > 0 && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Users size={14} className="mr-1 flex-shrink-0" />
+              <span className="truncate">
+                {allArtists.slice(0, 2).join(', ')}
+                {allArtists.length > 2 && ` +${allArtists.length - 2} more`}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

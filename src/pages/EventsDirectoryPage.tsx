@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { Search, Filter, Calendar, X } from 'lucide-react'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
-import { MobileEventCard } from '../components/MobileEventCard'
 import { supabase, type Event, trackPageView } from '../lib/supabase'
 
 const EVENT_TYPES = ['Art', 'Entertainment', 'Lifestyle', 'Local Flavor', 'Live Music', 'Party For A Cause', 'Community / Cultural', 'Shop Local']
@@ -168,7 +167,7 @@ export const EventsDirectoryPage: React.FC = () => {
     const grouped: { [key: string]: Event[] } = {}
     
     events.forEach(event => {
-      const eventDate = new Date(event.event_date + 'T00:00:00')
+      const eventDate = new Date(event.event_date)
       const dateKey = eventDate.toDateString()
       
       if (!grouped[dateKey]) {
@@ -180,7 +179,7 @@ export const EventsDirectoryPage: React.FC = () => {
     // Sort events within each date by start time
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => 
-        (a.event_start_time || '00:00:00').localeCompare(b.event_start_time || '00:00:00')
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
       )
     })
     
@@ -417,7 +416,7 @@ export const EventsDirectoryPage: React.FC = () => {
                       {/* Events for this date */}
                       <div className="space-y-3 px-4">
                         {groupedEvents[dateKey].map((event) => (
-                          <MobileEventCard key={event.id} event={event} />
+                          <EventCard key={event.id} event={event} />
                         ))}
                       </div>
                     </div>
