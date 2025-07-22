@@ -43,8 +43,8 @@ export const HomePage: React.FC = () => {
           *,
           venue:venues(*),
           event_artists(
-            artist:artists(*),
-            is_featured
+            is_featured,
+            artist:artists(*)
           )
         `)
         .eq('star', true)
@@ -63,8 +63,8 @@ export const HomePage: React.FC = () => {
           *,
           venue:venues(*),
           event_artists(
-            artist:artists(*),
-            is_featured
+            is_featured,
+            artist:artists(*)
           )
         `)
         .neq('star', true)

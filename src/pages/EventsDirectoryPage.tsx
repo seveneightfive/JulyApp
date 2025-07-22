@@ -44,8 +44,8 @@ export const EventsDirectoryPage: React.FC = () => {
         *,
         venue:venues(*),
         event_artists(
-          artist:artists(*),
-          is_featured
+          is_featured,
+          artist:artists(*)
         )
       `)
       .gte('start_date', oneDayAgo.toISOString())

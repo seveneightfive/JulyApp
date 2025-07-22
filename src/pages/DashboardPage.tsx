@@ -71,8 +71,8 @@ export const DashboardPage: React.FC = () => {
             *,
             venue:venues(*),
             event_artists(
-              artist:artists(*),
-              is_featured
+              is_featured,
+              artist:artists(*)
             )
           )
         `)
@@ -95,8 +95,8 @@ export const DashboardPage: React.FC = () => {
           *,
           venue:venues(*),
           event_artists(
-            artist:artists(*),
-            is_featured
+            is_featured,
+            artist:artists(*)
           )
         `)
         .gte('start_date', new Date().toISOString())

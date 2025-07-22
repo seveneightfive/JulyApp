@@ -33,7 +33,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
   const fetchUpcomingEventsCount = async () => {
     const { count } = await supabase
       .from('event_artists')
-      .select('*', { count: 'exact', head: true })
+      .select('events!inner(start_date)', { count: 'exact', head: true })
       .eq('artist_id', artist.id)
       .gte('events.start_date', new Date().toISOString())
 
