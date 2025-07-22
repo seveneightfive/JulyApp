@@ -5,9 +5,14 @@
       "destination": "/assets/$1"
     },
     {
+      "source": "/icon-192.png",
+      "destination": "/icon-192.png"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
   ]
 }
+
 
