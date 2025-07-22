@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, Calendar, X } from 'lucide-react'
+import { Search, Filter, Calendar, X, Clock, MapPin } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
 import { supabase, type Event, trackPageView } from '../lib/supabase'
