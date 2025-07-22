@@ -1,12 +1,11 @@
 import React from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Music, Palette, Mic, BookOpen } from 'lucide-react'
-import { type Artist } from '../lib/supabase'
+import { supabase, type Artist } from '../lib/supabase'
 
 interface ArtistCardProps {
-  artist: Artist & {
-    upcomingEventsCount?: number
-  }
+  artist: Artist
 }
 
 const getArtistTypeIcon = (type: string) => {
@@ -25,6 +24,22 @@ const getArtistTypeIcon = (type: string) => {
 }
 
 export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
+  const [upcomingEventsCount, setUpcomingEventsCount] = useState(0)
+
+  useEffect(() => {
+    fetchUpcomingEventsCount()
+  }, [artist.id])
+
+  const fetchUpcomingEventsCount = async () => {
+    const { count } = await supabase
+      .from('event_artists')
+      .select('*', { count: 'exact', head: true })
+      .eq('artist_id', artist.id)
+      .gte('events.event_date', new Date().toISOString())
+
+    setUpcomingEventsCount(count || 0)
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
       {/* Artist Image */}
@@ -102,14 +117,12 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
         )}
 
         {/* Upcoming Events Count */}
-        {artist.upcomingEventsCount !== undefined && (
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <Calendar size={14} />
-            <span>
-              {artist.upcomingEventsCount} upcoming event{artist.upcomingEventsCount !== 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <Calendar size={14} />
+          <span>
+            {upcomingEventsCount} upcoming event{upcomingEventsCount !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
     </div>
   )
