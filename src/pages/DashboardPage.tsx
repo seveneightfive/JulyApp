@@ -70,10 +70,7 @@ export const DashboardPage: React.FC = () => {
           event:events(
             *,
             venue:venues(*),
-            event_artists(
-              is_featured,
-              artist:artists(*)
-            )
+            event_artists!inner(is_featured, artist:artists(*))
           )
         `)
         .eq('user_id', user.id)
@@ -94,10 +91,7 @@ export const DashboardPage: React.FC = () => {
         .select(`
           *,
           venue:venues(*),
-          event_artists(
-            is_featured,
-            artist:artists(*)
-          )
+          event_artists!inner(is_featured, artist:artists(*))
         `)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true })

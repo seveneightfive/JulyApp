@@ -43,10 +43,7 @@ export const EventsDirectoryPage: React.FC = () => {
       .select(`
         *,
         venue:venues(*),
-        event_artists(
-          is_featured,
-          artist:artists(*)
-        )
+        event_artists!inner(is_featured, artist:artists(*))
       `)
       .gte('start_date', oneDayAgo.toISOString())
       .order('start_date', { ascending: true })
