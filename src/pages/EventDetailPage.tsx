@@ -50,7 +50,7 @@ export const EventDetailPage: React.FC = () => {
       .select(`
         *,
         venue:venues(*),
-        event_artists!inner(is_featured, artist:artists(*))
+        event_artists(artist:artists(*))
       `)
       .eq('slug', slug)
       .single()

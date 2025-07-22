@@ -42,7 +42,7 @@ export const HomePage: React.FC = () => {
         .select(`
           *,
           venue:venues(*),
-          event_artists!inner(is_featured, artist:artists(*))
+          event_artists(artist:artists(*))
         `)
         .eq('star', true)
         .gte('start_date', oneDayAgo.toISOString())
@@ -59,7 +59,7 @@ export const HomePage: React.FC = () => {
         .select(`
           *,
           venue:venues(*),
-          event_artists!inner(is_featured, artist:artists(*))
+          event_artists(artist:artists(*))
         `)
         .neq('star', true)
         .gte('start_date', oneDayAgo.toISOString())

@@ -75,9 +75,7 @@ export const ArtistDetailPage: React.FC = () => {
       .select(`
         *,
         venue:venues(*),
-        event_artists!inner(
-          artist:artists!inner(slug)
-        )
+        event_artists!inner(artist:artists!inner(slug))
       `)
       .eq('event_artists.artist.slug', slug)
       .gte('start_date', new Date().toISOString())

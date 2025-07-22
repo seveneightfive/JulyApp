@@ -43,7 +43,7 @@ export const EventsDirectoryPage: React.FC = () => {
       .select(`
         *,
         venue:venues(*),
-        event_artists!inner(is_featured, artist:artists(*))
+        event_artists(artist:artists(*))
       `)
       .gte('start_date', oneDayAgo.toISOString())
       .order('start_date', { ascending: true })
@@ -488,9 +488,7 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
       return 'Invalid Date'
     }
   }
-  const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
-  const otherArtists = event.event_artists?.filter(ea => !ea.is_featured) || []
-  const allArtists = [...featuredArtists, ...otherArtists]
+  const allArtists = event.event_artists || []
 
   return (
     <Link 
@@ -544,11 +542,7 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
                 {allArtists.slice(0, 2).map((eventArtist) => (
                   <span
                     key={eventArtist.artist.id}
-                    className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      eventArtist.is_featured
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-700'
-                    }`}
+                    className="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800"
                   >
                     {eventArtist.artist.name}
                   </span>

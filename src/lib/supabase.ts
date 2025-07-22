@@ -39,7 +39,6 @@ export interface Event {
   venue?: Venue
   event_artists?: {
     artist: Artist
-    is_featured: boolean
   }[]
 }
 

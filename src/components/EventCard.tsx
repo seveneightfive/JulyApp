@@ -8,9 +8,7 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
-  const otherArtists = event.event_artists?.filter(ea => !ea.is_featured) || []
-  const allArtists = [...featuredArtists, ...otherArtists]
+  const allArtists = event.event_artists || []
 
   return (
     <Link 
@@ -77,11 +75,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
               {allArtists.slice(0, 3).map((eventArtist, index) => (
                 <span
                   key={eventArtist.artist.id}
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    eventArtist.is_featured
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
+                  className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800"
                 >
                   {eventArtist.artist.name}
                 </span>

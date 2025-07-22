@@ -91,7 +91,7 @@ export const DashboardPage: React.FC = () => {
         .select(`
           *,
           venue:venues(*),
-          event_artists!inner(is_featured, artist:artists(*))
+          event_artists(artist:artists(*))
         `)
         .gte('start_date', new Date().toISOString())
         .order('start_date', { ascending: true })
