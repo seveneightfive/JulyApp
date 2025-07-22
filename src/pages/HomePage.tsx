@@ -158,10 +158,9 @@ export const HomePage: React.FC = () => {
           >
             <div className="relative w-full h-full">
               {starredEvents.map((event, index) => (
-                <Link
-                  to={`/events/${event.slug}`}
+                <div
                   key={event.id}
-                  className={`absolute inset-0 transition-opacity duration-1000 block ${
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
                     index === currentSlide ? 'opacity-100' : 'opacity-0'
                   }`}
                 >
@@ -215,12 +214,13 @@ export const HomePage: React.FC = () => {
                       <Link
                         to={`/events/${event.slug}`}
                         className="inline-block bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Learn More
                       </Link>
                     </div>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
             
