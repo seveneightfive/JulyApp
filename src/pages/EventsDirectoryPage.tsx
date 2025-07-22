@@ -457,17 +457,6 @@ export const EventsDirectoryPage: React.FC = () => {
 
 // Mobile Event Card Component with horizontal layout
 const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
-  const formatTime = () => {
-    if (event.event_start_time) {
-      const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)
-      return dummyDate.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
-    }
-    return null
-  }
 
   const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
   const otherArtists = event.event_artists?.filter(ea => !ea.is_featured) || []
@@ -506,7 +495,13 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
             {formatTime() && (
               <div className="flex items-center">
                 <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
-                <span>{formatTime()}</span>
+                <span>{event.event_start_time}</span>
+              </div>
+            )}
+            {event.event_start_time && (
+              <div className="flex items-center">
+                <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span>{event.event_start_time}</span>
               </div>
             )}
             
