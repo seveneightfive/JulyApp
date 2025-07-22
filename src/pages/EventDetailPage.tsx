@@ -124,8 +124,8 @@ export const EventDetailPage: React.FC = () => {
     fetchRSVPCounts()
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString + 'T00:00:00')
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -242,8 +242,8 @@ export const EventDetailPage: React.FC = () => {
                     <Calendar className="text-blue-600 mt-1" size={20} />
                     <div>
                       <p className="font-medium text-gray-900">Date</p>
-                      <p className="text-gray-600">{formatDate(event.event_date)}</p>
-                      {event.end_date && event.end_date !== event.event_date && (
+                      <p className="text-gray-600">{formatDate(event.start_date)}</p>
+                      {event.end_date && event.end_date !== event.start_date && (
                         <p className="text-gray-600">to {formatDate(event.end_date)}</p>
                       )}
                     </div>

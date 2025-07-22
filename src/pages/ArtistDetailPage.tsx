@@ -80,8 +80,8 @@ export const ArtistDetailPage: React.FC = () => {
         )
       `)
       .eq('event_artists.artist.slug', slug)
-      .gte('event_date', new Date().toISOString())
-      .order('event_date', { ascending: true })
+      .gte('start_date', new Date().toISOString())
+      .order('start_date', { ascending: true })
 
     if (data) {
       setEvents(data)

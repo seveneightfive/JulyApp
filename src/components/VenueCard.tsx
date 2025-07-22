@@ -19,7 +19,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
       .from('events')
       .select('*', { count: 'exact', head: true })
       .eq('venue_id', venue.id)
-      .gte('event_date', new Date().toISOString())
+      .gte('start_date', new Date().toISOString())
 
     setUpcomingEventsCount(count || 0)
   }

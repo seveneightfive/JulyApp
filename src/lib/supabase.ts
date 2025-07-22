@@ -21,7 +21,7 @@ export interface Event {
   id: string
   title: string
   description?: string
-  event_date: string
+  start_date: string
   end_date?: string
   event_start_time?: string
   event_end_time?: string

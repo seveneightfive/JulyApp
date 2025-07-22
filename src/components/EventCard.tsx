@@ -34,10 +34,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         {/* Date Badge */}
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm">
           <div className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-            {new Date(event.event_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' })}
+            {new Date(event.start_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short' })}
           </div>
           <div className="text-lg font-bold text-gray-900">
-            {new Date(event.event_date + 'T12:00:00').getDate()}
+            {new Date(event.start_date + 'T12:00:00').getDate()}
           </div>
         </div>
       </div>

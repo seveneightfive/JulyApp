@@ -35,7 +35,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
       .from('event_artists')
       .select('*', { count: 'exact', head: true })
       .eq('artist_id', artist.id)
-      .gte('events.event_date', new Date().toISOString())
+      .gte('events.start_date', new Date().toISOString())
 
     setUpcomingEventsCount(count || 0)
   }
