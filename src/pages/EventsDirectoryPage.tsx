@@ -168,7 +168,7 @@ export const EventsDirectoryPage: React.FC = () => {
     const grouped: { [key: string]: Event[] } = {}
     
     events.forEach(event => {
-      const eventDate = new Date(event.event_date)
+      const eventDate = new Date(event.event_date + 'T00:00:00')
       const dateKey = eventDate.toDateString()
       
       if (!grouped[dateKey]) {
@@ -180,7 +180,7 @@ export const EventsDirectoryPage: React.FC = () => {
     // Sort events within each date by start time
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => 
-        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+        (a.event_start_time || '00:00:00').localeCompare(b.event_start_time || '00:00:00')
       )
     })
     
