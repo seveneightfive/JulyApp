@@ -48,8 +48,8 @@ export const HomePage: React.FC = () => {
           )
         `)
         .eq('star', true)
-        .gte('event_date', oneDayAgo.toISOString().split('T')[0])
-        .order('event_date', { ascending: true })
+        .gte('start_date', oneDayAgo.toISOString())
+        .order('start_date', { ascending: true })
         .limit(5)
 
       if (starredData) {
@@ -68,8 +68,8 @@ export const HomePage: React.FC = () => {
           )
         `)
         .neq('star', true)
-        .gte('event_date', oneDayAgo.toISOString().split('T')[0])
-        .order('event_date', { ascending: true })
+        .gte('start_date', oneDayAgo.toISOString())
+        .order('start_date', { ascending: true })
         .limit(6)
 
       if (upcomingData) {
@@ -194,7 +194,7 @@ export const HomePage: React.FC = () => {
                         <div className="flex items-center">
                           <Calendar size={20} className="mr-2" />
                           <span className="font-medium">
-                            {new Date(event.event_date + 'T12:00:00').toLocaleDateString('en-US', {
+                            {new Date(event.start_date).toLocaleDateString('en-US', {
                               weekday: 'long',
                               month: 'long',
                               day: 'numeric'

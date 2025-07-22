@@ -48,8 +48,8 @@ export const EventsDirectoryPage: React.FC = () => {
           is_featured
         )
       `)
-      .gte('event_date', oneDayAgo.toISOString().split('T')[0])
-      .order('event_date', { ascending: true })
+      .gte('start_date', oneDayAgo.toISOString())
+      .order('start_date', { ascending: true })
 
     if (error) {
       console.error('Error fetching events:', error)
@@ -90,15 +90,15 @@ export const EventsDirectoryPage: React.FC = () => {
     const counts = {
       all: baseEvents.length,
       today: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
+        const eventDate = new Date(event.start_date)
         return eventDate >= today && eventDate < tomorrow
       }).length,
       week: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
+        const eventDate = new Date(event.start_date)
         return eventDate >= today && eventDate < weekFromNow
       }).length,
       month: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
+        const eventDate = new Date(event.start_date)
         return eventDate >= today && eventDate < monthFromNow
       }).length
     }
@@ -135,7 +135,7 @@ export const EventsDirectoryPage: React.FC = () => {
       const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
       
       filtered = filtered.filter(event => {
-        const eventDate = new Date(event.event_date + 'T00:00:00')
+        const eventDate = new Date(event.start_date)
         
         switch (dateFilter) {
           case 'today':
@@ -176,7 +176,7 @@ export const EventsDirectoryPage: React.FC = () => {
     const grouped: { [key: string]: Event[] } = {}
     
     events.forEach(event => {
-      const eventDate = new Date(event.event_date + 'T00:00:00')
+      const eventDate = new Date(event.start_date)
       const dateKey = eventDate.toDateString()
       
       if (!grouped[dateKey]) {
@@ -188,7 +188,7 @@ export const EventsDirectoryPage: React.FC = () => {
     // Sort events within each date by start time
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => 
-        new Date(a.event_date + 'T00:00:00').getTime() - new Date(b.event_date + 'T00:00:00').getTime()
+        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
       )
     })
     

@@ -78,7 +78,7 @@ export const DashboardPage: React.FC = () => {
         `)
         .eq('user_id', user.id)
         .eq('status', 'going')
-        .gte('event.event_date', new Date().toISOString())
+        .gte('event.start_date', new Date().toISOString())
 
       if (rsvps) {
         const events = rsvps.map(rsvp => rsvp.event).filter(Boolean)
@@ -99,8 +99,8 @@ export const DashboardPage: React.FC = () => {
             is_featured
           )
         `)
-        .gte('event_date', new Date().toISOString())
-        .order('event_date', { ascending: true })
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
         .limit(6)
 
       if (artistIds.length > 0 || venueIds.length > 0) {
