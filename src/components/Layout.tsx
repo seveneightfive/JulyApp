@@ -38,7 +38,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex min-h-0 flex-1 flex-col bg-white border-r border-gray-100">
           <div className="flex flex-1 flex-col pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-6">
+            <div className="flex items-center flex-shrink-0 px-3">
               <a href="/" className="flex items-center">
                 <img 
                   src="/785 Logo Valentine.png" 
@@ -48,33 +48,25 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               </a>
             </div>
             
-            {/* Search */}
-            <div className="mt-6 px-6">
-              <form onSubmit={handleSearch}>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Search..."
-                  />
-                </div>
-              </form>
-            </div>
-
             {/* Navigation */}
-            <nav className="mt-8 flex-1 px-3 space-y-1">
+            <nav className="mt-6 flex-1 px-3 space-y-1">
               {navigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    window.location.pathname === item.href || 
+                    (item.href !== '/' && window.location.pathname.startsWith(item.href))
+                      ? 'bg-black text-[#FFCE03]'
+                      : 'text-gray-700 hover:bg-black hover:text-white'
+                  }`}
                 >
-                  <item.icon className="text-gray-400 group-hover:text-gray-500 mr-3 h-5 w-5" />
+                  <item.icon className={`mr-3 h-5 w-5 ${
+                    window.location.pathname === item.href || 
+                    (item.href !== '/' && window.location.pathname.startsWith(item.href))
+                      ? 'text-[#FFCE03]'
+                      : 'text-gray-400 group-hover:text-white'
+                  }`} />
                   {item.name}
                 </a>
               ))}
@@ -82,6 +74,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* User Section */}
             <div className="flex-shrink-0 px-6 pb-4">
+              {/* Tagline */}
+              <div className="mb-4">
+                <p className="text-sm font-oswald font-medium text-gray-700 text-center">
+                  Local. Vocal. Since 2006.
+                </p>
+              </div>
+              
               {user ? (
                 <div className="space-y-3">
                   <div className="flex items-center">
@@ -126,6 +125,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     className="block w-full text-center bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#FFCE03] hover:text-black transition-colors"
                   >
                     Sign In
+                  </a>
+                  <a
+                    href="mailto:seveneightfive@gmail.com"
+                    className="block w-full text-center bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    Contact Us
                   </a>
                 </div>
               )}
