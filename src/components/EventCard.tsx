@@ -33,11 +33,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         timeZone: 'America/Chicago'
       })
     }
-    return eventDate.toLocaleTimeString('en-US', {
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true
-    })
+    return null
   }
 
   const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
@@ -82,12 +78,14 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         </h3>
 
         {/* Date and Time */}
-        <div className="flex items-center text-gray-600 mb-2">
-          <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span className="text-sm">
-            {formatTime()}
-          </span>
-        </div>
+        {formatTime() && (
+          <div className="flex items-center text-gray-600 mb-2">
+            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="text-sm">
+              {formatTime()}
+            </span>
+          </div>
+        )}
 
         {/* Venue */}
         {event.venue && (
