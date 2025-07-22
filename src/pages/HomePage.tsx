@@ -214,7 +214,6 @@ export const HomePage: React.FC = () => {
                       <Link
                         to={`/events/${event.slug}`}
                         className="inline-block bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         Learn More
                       </Link>
