@@ -295,7 +295,7 @@ export const EventsDirectoryPage: React.FC = () => {
           <div className="hidden lg:block mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Events Directory</h1>
+               <h1 className="text-3xl font-bold font-oswald text-gray-900">Events Directory</h1>
                 <p className="text-gray-600 mt-2">Discover amazing upcoming events</p>
               </div>
               {activeFiltersCount > 0 && (
@@ -425,7 +425,7 @@ export const EventsDirectoryPage: React.FC = () => {
               </div>
               
               {/* Desktop Layout - Grid */}
-              <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {filteredEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
