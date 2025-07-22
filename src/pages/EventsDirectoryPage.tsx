@@ -32,6 +32,11 @@ export const EventsDirectoryPage: React.FC = () => {
   }, [events, searchQuery, selectedTypes, dateFilter])
 
   const fetchEvents = async () => {
+    // Get current date in local timezone, start of day
+    const now = new Date()
+    const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const oneDayAgo = new Date(localToday.getTime() - 24 * 60 * 60 * 1000)
+    
     const { data, error } = await supabase
       .from('events')
       .select(`
@@ -42,7 +47,7 @@ export const EventsDirectoryPage: React.FC = () => {
           is_featured
         )
       `)
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', oneDayAgo.toISOString().split('T')[0])
       .order('event_date', { ascending: true })
 
     if (error) {
@@ -54,8 +59,10 @@ export const EventsDirectoryPage: React.FC = () => {
   }
 
   const calculateEventCounts = () => {
+    // Use local timezone for date calculations
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
     const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
     const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate())
 
@@ -82,15 +89,15 @@ export const EventsDirectoryPage: React.FC = () => {
     const counts = {
       all: baseEvents.length,
       today: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date)
-        return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+        const eventDate = new Date(event.event_date + 'T00:00:00')
+        return eventDate >= today && eventDate < tomorrow
       }).length,
       week: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date)
+        const eventDate = new Date(event.event_date + 'T00:00:00')
         return eventDate >= today && eventDate < weekFromNow
       }).length,
       month: baseEvents.filter(event => {
-        const eventDate = new Date(event.event_date)
+        const eventDate = new Date(event.event_date + 'T00:00:00')
         return eventDate >= today && eventDate < monthFromNow
       }).length
     }
@@ -124,13 +131,14 @@ export const EventsDirectoryPage: React.FC = () => {
     if (dateFilter !== 'all') {
       const now = new Date()
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
       
       filtered = filtered.filter(event => {
-        const eventDate = new Date(event.event_date)
+        const eventDate = new Date(event.event_date + 'T00:00:00')
         
         switch (dateFilter) {
           case 'today':
-            return eventDate >= today && eventDate < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+            return eventDate >= today && eventDate < tomorrow
           case 'week':
             const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
             return eventDate >= today && eventDate < weekFromNow
@@ -167,7 +175,7 @@ export const EventsDirectoryPage: React.FC = () => {
     const grouped: { [key: string]: Event[] } = {}
     
     events.forEach(event => {
-      const eventDate = new Date(event.event_date)
+      const eventDate = new Date(event.event_date + 'T00:00:00')
       const dateKey = eventDate.toDateString()
       
       if (!grouped[dateKey]) {
@@ -179,7 +187,7 @@ export const EventsDirectoryPage: React.FC = () => {
     // Sort events within each date by start time
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => 
-        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+        new Date(a.event_date + 'T00:00:00').getTime() - new Date(b.event_date + 'T00:00:00').getTime()
       )
     })
     
