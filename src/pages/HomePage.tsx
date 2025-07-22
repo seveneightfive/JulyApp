@@ -130,12 +130,38 @@ export const HomePage: React.FC = () => {
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section with Starred Events Slider */}
         {starredEvents.length > 0 && (
-          <section className="relative h-[60vh] lg:h-[70vh] overflow-hidden">
+          <section 
+            className="relative h-[60vh] lg:h-[70vh] overflow-hidden"
+            onTouchStart={(e) => {
+              const touch = e.touches[0]
+              const startX = touch.clientX
+              const handleTouchMove = (moveEvent: TouchEvent) => {
+                const currentX = moveEvent.touches[0].clientX
+                const diff = startX - currentX
+                if (Math.abs(diff) > 50) {
+                  if (diff > 0) {
+                    nextSlide()
+                  } else {
+                    prevSlide()
+                  }
+                  document.removeEventListener('touchmove', handleTouchMove)
+                  document.removeEventListener('touchend', handleTouchEnd)
+                }
+              }
+              const handleTouchEnd = () => {
+                document.removeEventListener('touchmove', handleTouchMove)
+                document.removeEventListener('touchend', handleTouchEnd)
+              }
+              document.addEventListener('touchmove', handleTouchMove)
+              document.addEventListener('touchend', handleTouchEnd)
+            }}
+          >
             <div className="relative w-full h-full">
               {starredEvents.map((event, index) => (
-                <div
+                <Link
+                  to={`/events/${event.slug}`}
                   key={event.id}
-                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                  className={`absolute inset-0 transition-opacity duration-1000 block ${
                     index === currentSlide ? 'opacity-100' : 'opacity-0'
                   }`}
                 >
@@ -162,8 +188,8 @@ export const HomePage: React.FC = () => {
                         <span className="text-yellow-400 font-medium">Featured Event</span>
                       </div>
                       
-                      <h1 className="text-3xl lg:text-6xl font-bold font-oswald text-white mb-4 drop-shadow-lg">
-                        {event.title}
+                      <h1 className="text-3xl lg:text-6xl font-bold font-oswald text-white mb-4 drop-shadow-lg uppercase">
+                        {event.title.toUpperCase()}
                       </h1>
                       
                       <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-8 space-y-2 lg:space-y-0 text-white/90 mb-6">
@@ -178,19 +204,6 @@ export const HomePage: React.FC = () => {
                           </span>
                         </div>
                         
-                        {event.event_start_time && (
-                          <div className="flex items-center">
-                            <Clock size={20} className="mr-2" />
-                            <span>
-                              {new Date(`2000-01-01T${event.event_start_time}`).toLocaleTimeString('en-US', {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true
-                              })}
-                            </span>
-                          </div>
-                        )}
-                        
                         {event.venue && (
                           <div className="flex items-center">
                             <MapPin size={20} className="mr-2" />
@@ -201,33 +214,15 @@ export const HomePage: React.FC = () => {
                       
                       <Link
                         to={`/events/${event.slug}`}
-                        className="inline-block bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                        className="inline-block bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
                       >
                         Learn More
                       </Link>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
-            
-            {/* Navigation Arrows */}
-            {starredEvents.length > 1 && (
-              <>
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </>
-            )}
             
             {/* Dots Indicator */}
             {starredEvents.length > 1 && (
