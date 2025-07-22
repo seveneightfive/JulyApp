@@ -42,7 +42,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <a href="/" className="flex items-center">
                 <img 
                   src="/785 Logo Valentine.png" 
-                  alt="EventHub" 
+                  alt="seveneightfive" 
                   className="h-8 w-auto"
                 />
               </a>
