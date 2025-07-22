@@ -57,8 +57,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     if (!audio) return
 
     const newTime = parseFloat(e.target.value)
-    audio.currentTime = newTime
-    setCurrentTime(newTime)
+    if (!isNaN(newTime) && isFinite(newTime)) {
+      audio.currentTime = newTime
+      setCurrentTime(newTime)
+    }
   }
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,18 +68,21 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     if (!audio) return
 
     const newVolume = parseFloat(e.target.value)
-    audio.volume = newVolume
-    setVolume(newVolume)
+    if (!isNaN(newVolume) && isFinite(newVolume)) {
+      audio.volume = newVolume
+      setVolume(newVolume)
+    }
   }
 
   const formatTime = (time: number) => {
+    if (!time || isNaN(time) || !isFinite(time)) return '0:00'
     const minutes = Math.floor(time / 60)
     const seconds = Math.floor(time % 60)
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 lg:left-64">
       <audio ref={audioRef} src={audioUrl} />
       
       <div className="max-w-7xl mx-auto px-4 py-3">
@@ -105,12 +110,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             <input
               type="range"
               min="0"
-              max={duration || 0}
+              max={duration && isFinite(duration) ? duration : 0}
               value={currentTime}
               onChange={handleSeek}
               className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #9333ea 0%, #9333ea ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)`
+                background: duration > 0 ? `linear-gradient(to right, #9333ea 0%, #9333ea ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)` : '#e5e7eb'
               }}
             />
             <span className="text-xs text-gray-500 w-10">
@@ -163,12 +168,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <input
             type="range"
             min="0"
-            max={duration || 0}
+            max={duration && isFinite(duration) ? duration : 0}
             value={currentTime}
             onChange={handleSeek}
             className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #9333ea 0%, #9333ea ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)`
+              background: duration > 0 ? `linear-gradient(to right, #9333ea 0%, #9333ea ${(currentTime / duration) * 100}%, #e5e7eb ${(currentTime / duration) * 100}%, #e5e7eb 100%)` : '#e5e7eb'
             }}
           />
           <span className="text-xs text-gray-500">

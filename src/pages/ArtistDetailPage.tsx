@@ -456,24 +456,6 @@ export const ArtistDetailPage: React.FC = () => {
               )}
 
               {/* Audio Player Section - Musicians only */}
-              {artist.artist_type === 'Musician' && artist.audio_file_url && artist.audio_title && (
-                <section className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Track</h2>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{artist.audio_title}</h3>
-                      <p className="text-gray-600">by {artist.name}</p>
-                    </div>
-                    <button
-                      onClick={() => setShowAudioPlayer(true)}
-                      className="bg-purple-600 text-white p-4 rounded-full hover:bg-purple-700 transition-colors shadow-lg"
-                    >
-                      <Play size={24} />
-                    </button>
-                  </div>
-                </section>
-              )}
-
               {/* Upcoming Events */}
               {events.length > 0 && (
                 <section className="bg-white rounded-xl p-6 shadow-sm">
@@ -619,6 +601,26 @@ export const ArtistDetailPage: React.FC = () => {
             <ReviewSection entityType="artist" entityId={artist.id} />
           </div>
         </div>
+
+        {/* Sticky Featured Track - Musicians only */}
+        {artist.artist_type === 'Musician' && artist.audio_file_url && artist.audio_title && (
+          <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg z-40 lg:left-64">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-white truncate">{artist.audio_title}</h3>
+                  <p className="text-white/80 text-sm">by {artist.name}</p>
+                </div>
+                <button
+                  onClick={() => setShowAudioPlayer(true)}
+                  className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors shadow-lg ml-4 flex-shrink-0"
+                >
+                  <Play size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Audio Player */}
         {showAudioPlayer && artist.audio_file_url && artist.audio_title && (
