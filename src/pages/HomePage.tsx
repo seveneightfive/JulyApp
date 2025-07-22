@@ -223,9 +223,6 @@ export const HomePage: React.FC = () => {
                       >
                         Learn More
                       </Link>
-
-                      {/* DEBUG: Display event slug */}
-                      <p className="text-white text-xs mt-2">Debug Slug: {starredEvents[currentSlide]?.slug}</p>
                     </div>
                   </div>
                 </div>

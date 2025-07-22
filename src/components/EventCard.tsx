@@ -8,19 +8,6 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const formatTime = () => {
-    if (event.event_start_time) {
-      const dummyDate = new Date(`2000-01-01T${event.event_start_time}`)
-      return dummyDate.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'America/Chicago'
-      })
-    }
-    return null
-  }
-
   const featuredArtists = event.event_artists?.filter(ea => ea.is_featured) || []
   const otherArtists = event.event_artists?.filter(ea => !ea.is_featured) || []
   const allArtists = [...featuredArtists, ...otherArtists]
@@ -63,11 +50,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         </h3>
 
         {/* Date and Time */}
-        {formatTime() && (
+        {event.event_start_time && (
           <div className="flex items-center text-gray-600 mb-2">
             <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
             <span className="text-sm">
-              {formatTime()}
+              {event.event_start_time}
             </span>
           </div>
         )}
