@@ -30,11 +30,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         )}
         
         {/* Date Badge - Upper Left */}
-        <div className="absolute top-0 left-0 bg-yellow-400 rounded-br-lg px-3 py-2 shadow-sm">
+        <div className="absolute top-0 left-0 bg-yellow-400 rounded-br-lg px-4 py-3 shadow-sm">
           <div className="text-xs font-medium text-gray-600 uppercase tracking-wide text-center">
             {new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
           </div>
-          <div className="text-xl font-bold text-black text-center">
+          <div className="text-2xl font-bold text-black text-center">
             {new Date(event.start_date).getDate()}
           </div>
         </div>
@@ -50,7 +50,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         )}
 
         {/* Event Title - Second line */}
-        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors font-oswald uppercase">
+        <h3 className="font-medium text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors font-oswald uppercase tracking-wide">
           {event.title.toUpperCase()}
         </h3>
 
