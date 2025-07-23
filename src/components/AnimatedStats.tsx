@@ -119,7 +119,7 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
               to={stat.link}
               className={`group block text-center transform hover:scale-105 transition-all duration-300 md:self-auto md:translate-y-0 ${
                 index === 1 ? 'self-end translate-y-2' : 
-                index === 2 ? 'self-start translate-y-4' : 
+                index === 2 ? 'self-start translate-y-2' : 
                 'self-start'
               }`}
               style={{
