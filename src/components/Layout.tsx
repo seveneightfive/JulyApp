@@ -125,13 +125,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <div className="space-y-2">
                   <button
                     onClick={() => openAuthModal('signin')}
-                    className="block w-full text-center bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#FFCE03] hover:text-black transition-colors"
+                    className="btn-black w-full text-center"
                   >
                     Sign In
                   </button>
                   <a
                     href="mailto:seveneightfive@gmail.com"
-                    className="block w-full text-center bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+                    className="btn-white w-full text-center inline-block"
                   >
                     Contact Us
                   </a>

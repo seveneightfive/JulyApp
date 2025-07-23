@@ -259,10 +259,10 @@ export const EventsDirectoryPage: React.FC = () => {
                       <button
                         key={option.value}
                         onClick={() => setDateFilter(option.value as any)}
-                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                        className={`btn-filter transition-colors ${
                           dateFilter === option.value
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                            ? 'active'
+                            : ''
                         }`}
                       >
                         <div className="font-medium">{option.label}</div>
@@ -280,10 +280,10 @@ export const EventsDirectoryPage: React.FC = () => {
                       <button
                         key={type}
                         onClick={() => toggleType(type)}
-                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                        className={`btn-filter transition-colors ${
                           selectedTypes.includes(type)
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                            ? 'active'
+                            : ''
                         }`}
                       >
                         {type}
@@ -346,10 +346,10 @@ export const EventsDirectoryPage: React.FC = () => {
                     <button
                       key={option.value}
                       onClick={() => setDateFilter(option.value as any)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`btn-filter transition-colors ${
                         dateFilter === option.value
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       <div>
@@ -369,10 +369,10 @@ export const EventsDirectoryPage: React.FC = () => {
                     <button
                       key={type}
                       onClick={() => toggleType(type)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`btn-filter transition-colors ${
                         selectedTypes.includes(type)
-                          ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       {type}

@@ -434,10 +434,10 @@ export const EventDetailPage: React.FC = () => {
                   <div className="space-y-3">
                     <button
                       onClick={() => handleRSVP('going')}
-                      className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg border transition-colors ${
+                      className={`w-full flex items-center justify-center space-x-2 transition-colors ${
                         rsvpStatus === 'going'
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-green-50'
+                          ? 'btn-pink'
+                          : 'btn-filter'
                       }`}
                     >
                       <Heart size={16} />
@@ -445,10 +445,10 @@ export const EventDetailPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleRSVP('interested')}
-                      className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg border transition-colors ${
+                      className={`w-full flex items-center justify-center space-x-2 transition-colors ${
                         rsvpStatus === 'interested'
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'
+                          ? 'btn-yellow'
+                          : 'btn-filter'
                       }`}
                     >
                       <Star size={16} />
@@ -493,7 +493,7 @@ export const EventDetailPage: React.FC = () => {
                     
                     <button
                       onClick={() => navigate(`/venues/${event.venue?.slug}`)}
-                      className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="btn-white w-full"
                     >
                       View Venue Details
                     </button>
@@ -516,7 +516,7 @@ export const EventDetailPage: React.FC = () => {
                       navigator.clipboard.writeText(window.location.href)
                     }
                   }}
-                  className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="btn-white w-full flex items-center justify-center space-x-2"
                 >
                   <Share2 size={16} />
                   <span>Share Event</span>

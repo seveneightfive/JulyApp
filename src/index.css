@@ -2,6 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  .btn-primary {
+    font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 32px;
+    border-radius: 24px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    line-height: 1;
+  }
+  
+  .btn-black {
+    @apply btn-primary bg-black text-white border-2 border-black;
+  }
+  
+  .btn-black:hover {
+    @apply bg-white text-black;
+  }
+  
+  .btn-white {
+    @apply btn-primary bg-white text-black border-2 border-black;
+  }
+  
+  .btn-white:hover {
+    @apply bg-black text-white;
+  }
+  
+  .btn-yellow {
+    @apply btn-primary bg-[#FFCE03] text-black border-2 border-[#FFCE03];
+  }
+  
+  .btn-yellow:hover {
+    @apply bg-black text-[#FFCE03] border-black;
+  }
+  
+  .btn-pink {
+    @apply btn-primary bg-[#C80650] text-white border-2 border-[#C80650];
+  }
+  
+  .btn-pink:hover {
+    @apply bg-white text-[#C80650];
+  }
+  
+  .btn-filter {
+    font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 24px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    line-height: 1;
+    @apply bg-white text-black border-2 border-gray-300;
+  }
+  
+  .btn-filter:hover {
+    @apply border-black;
+  }
+  
+  .btn-filter.active {
+    @apply bg-black text-[#FFCE03] border-black;
+  }
+}
+
 @layer utilities {
   .line-clamp-1 {
     overflow: hidden;

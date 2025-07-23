@@ -98,7 +98,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
               <button
                 type="submit"
                 disabled={isLoading || !email}
-                className="w-full bg-black text-white py-3 rounded-xl font-medium hover:bg-[#FFCE03] hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="btn-black w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {isLoading ? (
                   <Loader size={20} className="animate-spin" />
@@ -138,7 +138,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode }) =
             </p>
             <button
               onClick={handleClose}
-              className="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+              className="btn-white"
             >
               Got it
             </button>

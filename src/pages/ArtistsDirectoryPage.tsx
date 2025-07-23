@@ -176,10 +176,10 @@ export const ArtistsDirectoryPage: React.FC = () => {
                       <button
                         key={type}
                         onClick={() => toggleType(type)}
-                        className={`p-3 rounded-lg border text-sm transition-colors ${
+                        className={`btn-filter transition-colors ${
                           selectedTypes.includes(type)
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                            ? 'active'
+                            : ''
                         }`}
                       >
                         {type}
@@ -197,10 +197,10 @@ export const ArtistsDirectoryPage: React.FC = () => {
                         <button
                           key={genre}
                           onClick={() => toggleGenre(genre)}
-                          className={`p-2 rounded-lg border text-xs transition-colors ${
+                          className={`btn-filter transition-colors text-xs ${
                             selectedGenres.includes(genre)
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                              ? 'active'
+                              : ''
                           }`}
                         >
                           {genre}
@@ -219,10 +219,10 @@ export const ArtistsDirectoryPage: React.FC = () => {
                         <button
                           key={medium}
                           onClick={() => toggleMedium(medium)}
-                          className={`p-2 rounded-lg border text-xs transition-colors ${
+                          className={`btn-filter transition-colors text-xs ${
                             selectedMediums.includes(medium)
-                              ? 'bg-green-600 text-white border-green-600'
-                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                              ? 'active'
+                              : ''
                           }`}
                         >
                           {medium}
@@ -281,10 +281,10 @@ export const ArtistsDirectoryPage: React.FC = () => {
                     <button
                       key={type}
                       onClick={() => toggleType(type)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`btn-filter transition-colors ${
                         selectedTypes.includes(type)
-                          ? 'bg-purple-600 text-white border-purple-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       {type}
