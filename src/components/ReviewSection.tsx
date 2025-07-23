@@ -106,7 +106,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ entityType, entity
         {user && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+            className="btn-pink flex items-center space-x-2"
           >
             <Plus size={16} />
             <span>Write Review</span>
@@ -149,14 +149,14 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ entityType, entity
             <button
               type="submit"
               disabled={loading}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+              className="btn-pink disabled:opacity-50"
             >
               {loading ? 'Submitting...' : 'Submit Review'}
             </button>
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+              className="btn-white"
             >
               Cancel
             </button>

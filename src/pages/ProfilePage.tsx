@@ -84,7 +84,7 @@ export const ProfilePage: React.FC = () => {
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-3 py-2 rounded-lg"
+                className="btn-black flex items-center space-x-2"
               >
                 <Edit3 size={16} />
                 <span>Edit</span>
@@ -94,14 +94,14 @@ export const ProfilePage: React.FC = () => {
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-3 py-2 rounded-lg"
+                  className="btn-yellow flex items-center space-x-2 disabled:opacity-50"
                 >
                   <Save size={16} />
                   <span>Save</span>
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex items-center space-x-2 bg-gray-600 text-white px-3 py-2 rounded-lg"
+                  className="btn-white flex items-center space-x-2"
                 >
                   <X size={16} />
                 </button>
@@ -120,7 +120,7 @@ export const ProfilePage: React.FC = () => {
             {!isEditing ? (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="btn-black flex items-center space-x-2"
               >
                 <Edit3 size={16} />
                 <span>Edit Profile</span>
@@ -130,14 +130,14 @@ export const ProfilePage: React.FC = () => {
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="btn-yellow flex items-center space-x-2 disabled:opacity-50"
                 >
                   <Save size={16} />
                   <span>{loading ? 'Saving...' : 'Save Changes'}</span>
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="btn-white flex items-center space-x-2"
                 >
                   <X size={16} />
                   <span>Cancel</span>
