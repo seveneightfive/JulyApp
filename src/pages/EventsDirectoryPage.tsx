@@ -487,16 +487,20 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
       return 'Invalid Date'
     }
   }
+
+  const formattedTime = formatTime()
+  const formattedDate = formatEventDate()
+
   const allArtists = event.event_artists || []
 
   return (
     <Link 
       to={`/events/${event.slug}`}
-      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden mx-4"
+      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden mx-2"
     >
       <div className="flex">
         {/* Event Image - 16:9 aspect ratio */}
-        <div className="w-24 h-16 bg-gray-200 overflow-hidden flex-shrink-0">
+        <div className="w-32 h-20 bg-gray-200 overflow-hidden flex-shrink-0">
           {event.image_url ? (
             <img
               src={event.image_url}
@@ -511,9 +515,9 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
         </div>
 
         {/* Event Details */}
-        <div className="flex-1 p-3 min-w-0">
+        <div className="flex-1 p-2 min-w-0">
           {/* Event Title */}
-          <h3 className="font-bold text-sm text-gray-900 mb-1 line-clamp-1 font-oswald">
+          <h3 className="font-bold text-base text-gray-900 mb-1 line-clamp-1 font-oswald">
             {event.title}
           </h3>
 
@@ -522,7 +526,7 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
             {event.start_date && (
               <div className="flex items-center">
                 <Clock className="w-3 h-3 mr-1 flex-shrink-0" />
-                <span>{formatEventDate()}{formatTime() ? ` • ${formatTime()}` : ''}</span>
+                <span>{formattedDate}{formattedTime ? ` @${formattedTime}` : ''}</span>
               </div>
             )}
             
