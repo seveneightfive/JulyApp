@@ -126,8 +126,7 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
             >
               <div className="relative mb-6">
                 {/* Animated Circle Background */}
-                <div className={`w-32 h-32 lg:w-40 lg:h-40 mx-auto rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
-                  <stat.icon size={48} className="text-white" />
+                <div className={`w-32 h-32 lg:w-40 lg:h-40 mx-auto rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
                 </div>
                 
                 {/* Animated Number */}
