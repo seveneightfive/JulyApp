@@ -112,7 +112,7 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-y-8 md:grid md:grid-cols-3 md:gap-8 lg:gap-12">
+        <div className="flex flex-col items-center gap-y-4 md:grid md:grid-cols-3 md:gap-8 lg:gap-12">
           {stats.map((stat, index) => (
             <Link
               key={stat.label}
