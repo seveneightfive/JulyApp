@@ -324,13 +324,13 @@ export const DashboardPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <a
                     href="/artists"
-                    className="bg-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                    className="btn-pink"
                   >
                     Discover Artists
                   </a>
                   <a
                     href="/venues"
-                    className="bg-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-teal-700 transition-colors"
+                    className="btn-yellow"
                   >
                     Find Venues
                   </a>

@@ -205,7 +205,7 @@ export const HomePage: React.FC = () => {
                       </div>
                       <Link
                         to={`/events/${starredEvents[currentSlide]?.slug}`}
-                        className="inline-block bg-white text-black px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors text-sm"
+                        className="btn-white inline-block"
                       >
                         Learn More
                       </Link>
@@ -338,13 +338,13 @@ export const HomePage: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 to="/events"
-                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                className="btn-white"
               >
                 Browse Events
               </Link>
               <Link
                 to="/artists"
-                className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+                className="btn-black"
               >
                 Meet Artists
               </Link>
