@@ -56,24 +56,26 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
               {getArtistTypeIcon(artist.artist_type || 'Musician')}
             </div>
           )}
+          
+          {/* Artist Type Badge - Over Image */}
+          {artist.artist_type && (
+            <div className="absolute top-0 right-0 bg-black/80 text-white px-2 py-1 rounded-bl-lg">
+              <div className="flex items-center space-x-1">
+                {getArtistTypeIcon(artist.artist_type)}
+                <span className="text-xs font-medium">{artist.artist_type}</span>
+              </div>
+            </div>
+          )}
         </div>
       </Link>
 
       {/* Artist Info */}
       <div className="p-4">
         <Link to={`/artists/${artist.slug}`} className="block">
-          <h3 className="font-oswald text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors mb-2">
-            {artist.name}
+          <h3 className="font-oswald text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors mb-2 uppercase tracking-wide">
+            {artist.name.toUpperCase()}
           </h3>
         </Link>
-
-        {/* Artist Type */}
-        {artist.artist_type && (
-          <div className="flex items-center space-x-2 mb-2">
-            {getArtistTypeIcon(artist.artist_type)}
-            <span className="text-sm text-gray-600">{artist.artist_type}</span>
-          </div>
-        )}
 
         {/* Genres/Mediums */}
         {artist.musical_genres && artist.musical_genres.length > 0 && (
@@ -82,7 +84,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
               {artist.musical_genres.slice(0, 2).map((genre) => (
                 <span
                   key={genre}
-                  className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                  className="inline-block bg-black text-white text-xs px-2 py-1 rounded-full"
                 >
                   {genre}
                 </span>
