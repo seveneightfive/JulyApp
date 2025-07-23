@@ -15,8 +15,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
       to={`/events/${event.slug}`}
       className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
     >
-      {/* Event Image - 16:9 aspect ratio */}
-      <div className="relative aspect-video bg-gray-200 overflow-hidden">
+      {/* Event Image - Taller aspect ratio */}
+      <div className="relative aspect-[4/3] bg-gray-200 overflow-hidden">
         {event.image_url ? (
           <img
             src={event.image_url}
@@ -29,15 +29,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
         )}
         
-        {/* Date Badge */}
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm">
+        {/* Date Badge - Upper Left */}
+        <div className="absolute top-3 left-3 bg-yellow-400 rounded-lg px-3 py-2 shadow-sm">
           <div className="text-xs font-medium text-gray-600 uppercase tracking-wide text-center">
             {new Date(event.start_date).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
           </div>
-          <div className="text-xs font-medium text-gray-600 uppercase tracking-wide text-center">
-            {new Date(event.start_date).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
-          </div>
-          <div className="text-lg font-bold text-gray-900 text-center">
+          <div className="text-xl font-bold text-black text-center">
             {new Date(event.start_date).getDate()}
           </div>
         </div>
@@ -45,43 +42,41 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
       {/* Event Details */}
       <div className="p-4">
-        {/* Event Title */}
+        {/* Venue - First line */}
+        {event.venue && (
+          <div className="text-purple-600 text-sm font-medium mb-1 uppercase tracking-wide">
+            {event.venue.name}
+          </div>
+        )}
+
+        {/* Event Title - Second line */}
         <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors font-['Oswald']">
           {event.title}
         </h3>
 
-        {/* Date and Time */}
+        {/* Start Time - Third line */}
         {event.event_start_time && (
-          <div className="flex items-center text-gray-600 mb-2">
-            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+          <div className="text-gray-600 mb-3">
             <span className="text-sm">
               {event.event_start_time}
             </span>
           </div>
         )}
 
-        {/* Venue */}
-        {event.venue && (
-          <div className="flex items-center text-gray-600 mb-3">
-            <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="text-sm truncate">{event.venue.name}</span>
-          </div>
-        )}
-
-        {/* Artists */}
+        {/* Artists - Black pills */}
         {allArtists.length > 0 && (
           <div className="mb-3">
             <div className="flex flex-wrap gap-1">
               {allArtists.slice(0, 3).map((eventArtist, index) => (
                 <span
                   key={eventArtist.artist.id}
-                  className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800"
+                  className="text-xs px-2 py-1 rounded-full bg-black text-white"
                 >
                   {eventArtist.artist.name}
                 </span>
               ))}
               {allArtists.length > 3 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                <span className="text-xs px-2 py-1 rounded-full bg-black text-white">
                   +{allArtists.length - 3} more
                 </span>
               )}
