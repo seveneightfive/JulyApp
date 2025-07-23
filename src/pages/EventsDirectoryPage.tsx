@@ -407,7 +407,7 @@ export const EventsDirectoryPage: React.FC = () => {
                   return (
                     <div key={dateKey} className="space-y-3">
                       {/* Date Header */}
-                      <div className="sticky top-16 z-30 bg-gray-50 flex items-center space-x-4 px-4 py-2">
+                      <div className="sticky top-16 z-30 bg-gray-100 flex items-center space-x-4 px-4 py-2">
                         <div className="text-center">
                           <div className="text-xs text-gray-500 font-medium">{monthName}</div>
                           <div className="text-2xl font-bold text-gray-900">{dayNumber}</div>
