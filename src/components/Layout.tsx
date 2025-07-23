@@ -3,6 +3,7 @@ import { Search, Menu, X, User, Calendar, Music, MapPin, Home, Star, Plus, Bell,
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { AuthModal } from './AuthModal'
+import { ContactModal } from './ContactModal'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -13,6 +14,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [contactModalOpen, setContactModalOpen] = useState(false)
   const { user, profile, signOut } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
@@ -129,12 +131,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   >
                     Sign In
                   </button>
-                  <a
-                    href="mailto:seveneightfive@gmail.com"
+                  <button
+                    onClick={() => setContactModalOpen(true)}
                     className="btn-white w-full text-center inline-block"
                   >
                     Contact Us
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
@@ -204,6 +206,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         mode={authMode}
+      />
+      
+      <ContactModal 
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
       />
     </div>
   )

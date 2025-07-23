@@ -5,6 +5,7 @@ import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
 import { ArtistCard } from '../components/ArtistCard'
 import { VenueCard } from '../components/VenueCard'
+import { AnimatedStats } from '../components/AnimatedStats'
 import { supabase, type Event, type Artist, type Venue, trackPageView } from '../lib/supabase'
 
 export const HomePage: React.FC = () => {
@@ -14,6 +15,11 @@ export const HomePage: React.FC = () => {
   const [featuredVenues, setFeaturedVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [stats, setStats] = useState({
+    totalEvents: 0,
+    totalArtists: 0,
+    totalVenues: 0
+  })
 
   useEffect(() => {
     trackPageView('home')
@@ -92,6 +98,19 @@ export const HomePage: React.FC = () => {
       if (venuesData) {
         setFeaturedVenues(venuesData)
       }
+
+      // Fetch total counts for stats
+      const [eventsCount, artistsCount, venuesCount] = await Promise.all([
+        supabase.from('events').select('id', { count: 'exact', head: true }),
+        supabase.from('artists').select('id', { count: 'exact', head: true }),
+        supabase.from('venues').select('id', { count: 'exact', head: true })
+      ])
+
+      setStats({
+        totalEvents: eventsCount.count || 0,
+        totalArtists: artistsCount.count || 0,
+        totalVenues: venuesCount.count || 0
+      })
 
     } catch (error) {
       console.error('Error fetching home data:', error)
@@ -231,6 +250,13 @@ export const HomePage: React.FC = () => {
             )}
           </section>
         )}
+
+        {/* Animated Stats Section */}
+        <AnimatedStats 
+          eventCount={stats.totalEvents}
+          artistCount={stats.totalArtists}
+          venueCount={stats.totalVenues}
+        />
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
