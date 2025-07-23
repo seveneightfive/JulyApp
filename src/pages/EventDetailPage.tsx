@@ -12,10 +12,11 @@ import {
   Heart,
   Share2,
   Music,
-  Palette
+  Palette,
+  Eye
 } from 'lucide-react'
 import { Layout } from '../components/Layout'
-import { ReviewSection } from '../components/ReviewSection'
+import { ArtistCard } from '../components/ArtistCard'
 import { supabase, type Event, type EventRSVP, trackPageView } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
@@ -27,20 +28,25 @@ export const EventDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [rsvpStatus, setRsvpStatus] = useState<string | null>(null)
   const [rsvpCounts, setRsvpCounts] = useState({ going: 0, interested: 0 })
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+  const [pageViews, setPageViews] = useState(0)
 
   useEffect(() => {
     if (slug) {
       fetchEvent()
-      trackPageView('event', event?.id)
     }
   }, [slug])
 
   useEffect(() => {
     if (event && user) {
       fetchRSVPStatus()
+      checkFollowStatus()
     }
     if (event) {
       fetchRSVPCounts()
+      fetchPageViews()
+      trackPageView('event', event.id)
     }
   }, [event, user])
 
@@ -93,6 +99,32 @@ export const EventDetailPage: React.FC = () => {
     setRsvpCounts(counts)
   }
 
+  const checkFollowStatus = async () => {
+    if (!event || !user) return
+
+    const { data } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('entity_type', 'event')
+      .eq('entity_id', event.id)
+      .single()
+
+    setIsFollowing(!!data)
+  }
+
+  const fetchPageViews = async () => {
+    if (!event) return
+
+    const { count } = await supabase
+      .from('page_views')
+      .select('id', { count: 'exact', head: true })
+      .eq('page_type', 'event')
+      .eq('page_id', event.id)
+
+    setPageViews(count || 0)
+  }
+
   const handleRSVP = async (status: string) => {
     if (!user || !event) return
 
@@ -121,6 +153,35 @@ export const EventDetailPage: React.FC = () => {
     fetchRSVPCounts()
   }
 
+  const handleFollow = async () => {
+    if (!user || !event) return
+
+    setFollowLoading(true)
+    try {
+      if (isFollowing) {
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('entity_type', 'event')
+          .eq('entity_id', event.id)
+      } else {
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            entity_type: 'event',
+            entity_id: event.id
+          })
+      }
+      setIsFollowing(!isFollowing)
+    } catch (error) {
+      console.error('Error following event:', error)
+    } finally {
+      setFollowLoading(false)
+    }
+  }
+
   const formatDate = (dateString: string | Date) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : dateString
     return date.toLocaleDateString('en-US', {
@@ -131,28 +192,18 @@ export const EventDetailPage: React.FC = () => {
     })
   }
 
-  const formatTimeOfDay = (timeString: string) => {
-    const dummyDate = new Date(`2000-01-01T${timeString}`)
-    return dummyDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'America/Chicago'
-    })
-  }
-
   const getEventTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
-      'Art': 'bg-purple-100 text-purple-800',
-      'Entertainment': 'bg-pink-100 text-pink-800',
-      'Lifestyle': 'bg-green-100 text-green-800',
-      'Local Flavor': 'bg-orange-100 text-orange-800',
-      'Live Music': 'bg-blue-100 text-blue-800',
-      'Party For A Cause': 'bg-red-100 text-red-800',
-      'Community / Cultural': 'bg-indigo-100 text-indigo-800',
-      'Shop Local': 'bg-yellow-100 text-yellow-800'
+      'Art': 'bg-purple-600 text-white',
+      'Entertainment': 'bg-pink-600 text-white',
+      'Lifestyle': 'bg-green-600 text-white',
+      'Local Flavor': 'bg-orange-600 text-white',
+      'Live Music': 'bg-blue-600 text-white',
+      'Party For A Cause': 'bg-red-600 text-white',
+      'Community / Cultural': 'bg-indigo-600 text-white',
+      'Shop Local': 'bg-yellow-600 text-white'
     }
-    return colors[type] || 'bg-gray-100 text-gray-800'
+    return colors[type] || 'bg-gray-600 text-white'
   }
 
   if (loading) {
@@ -186,8 +237,66 @@ export const EventDetailPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white border-b">
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
+          <div className="flex items-center justify-between p-4">
+            <button
+              onClick={() => navigate('/events')}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: event.title,
+                      text: event.description,
+                      url: window.location.href
+                    })
+                  } else {
+                    navigator.clipboard.writeText(window.location.href)
+                  }
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <Share2 size={20} />
+              </button>
+              {user && (
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`p-2 rounded-full transition-colors ${
+                    isFollowing 
+                      ? 'bg-red-50 text-red-600' 
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Hero Image - Full Width */}
+        <div className="lg:hidden w-full">
+          {event.image_url ? (
+            <img
+              src={event.image_url}
+              alt={event.title}
+              className="w-full h-64 object-cover"
+            />
+          ) : (
+            <div className="w-full h-64 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <Calendar size={64} className="text-white opacity-50" />
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:block bg-white border-b">
           <div className="max-w-6xl mx-auto px-4 py-4">
             <button
               onClick={() => navigate('/events')}
@@ -203,9 +312,9 @@ export const EventDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
-              {/* Event Image */}
+              {/* Desktop Event Image */}
               {event.image_url && (
-                <div className="mb-8">
+                <div className="hidden lg:block mb-8">
                   <img
                     src={event.image_url}
                     alt={event.title}
@@ -220,14 +329,14 @@ export const EventDetailPage: React.FC = () => {
                   {event.event_types?.map((type) => (
                     <span
                       key={type}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${getEventTypeColor(type)}`}
+                      className={`px-3 py-1 rounded-full text-sm font-bold ${getEventTypeColor(type)}`}
                     >
                       {type}
                     </span>
                   ))}
                 </div>
 
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">{event.title}</h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-4 font-oswald">{event.title}</h1>
 
                 {event.description && (
                   <p className="text-gray-600 mb-6 leading-relaxed">{event.description}</p>
@@ -240,9 +349,6 @@ export const EventDetailPage: React.FC = () => {
                     <div>
                       <p className="font-medium text-gray-900">Date</p>
                       <p className="text-gray-600">{formatDate(event.start_date)}</p>
-                      {event.end_date && event.end_date !== event.start_date && (
-                        <p className="text-gray-600">to {formatDate(event.end_date)}</p>
-                      )}
                     </div>
                   </div>
 
@@ -252,20 +358,9 @@ export const EventDetailPage: React.FC = () => {
                       <div>
                         <p className="font-medium text-gray-900">Time</p>
                         <p className="text-gray-600">
-                          {event.event_start_time && formatTimeOfDay(event.event_start_time)}
-                          {event.event_end_time && ` - ${formatTimeOfDay(event.event_end_time)}`}
+                          {event.event_start_time}
+                          {event.event_end_time && ` - ${event.event_end_time}`}
                         </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {event.venue && (
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="text-blue-600 mt-1" size={20} />
-                      <div>
-                        <p className="font-medium text-gray-900">Venue</p>
-                        <p className="text-gray-600">{event.venue.name}</p>
-                        <p className="text-gray-500 text-sm">{event.venue.address}</p>
                       </div>
                     </div>
                   )}
@@ -306,6 +401,14 @@ export const EventDetailPage: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  <div className="flex items-start space-x-3">
+                    <Eye className="text-blue-600 mt-1" size={20} />
+                    <div>
+                      <p className="font-medium text-gray-900">Views</p>
+                      <p className="text-gray-600">{pageViews.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -313,47 +416,13 @@ export const EventDetailPage: React.FC = () => {
               {event.event_artists && event.event_artists.length > 0 && (
                 <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
                   <h2 className="text-xl font-bold text-gray-900 mb-4">Featured Artists</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {event.event_artists.map(({ artist, is_featured }) => (
-                      <div
-                        key={artist.id}
-                        className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                        onClick={() => navigate(`/artists/${artist.slug}`)}
-                      >
-                        {artist.avatar_url ? (
-                          <img
-                            src={artist.avatar_url}
-                            alt={artist.name}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                            {artist.artist_type === 'Musician' ? (
-                              <Music size={20} className="text-gray-500" />
-                            ) : (
-                              <Palette size={20} className="text-gray-500" />
-                            )}
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{artist.name}</h3>
-                          {artist.tagline && (
-                            <p className="text-sm text-gray-600">{artist.tagline}</p>
-                          )}
-                          {is_featured && (
-                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full mt-1">
-                              Featured
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {event.event_artists.map(({ artist }) => (
+                      <ArtistCard key={artist.id} artist={artist} />
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Reviews Section */}
-              <ReviewSection entityType="event" entityId={event.id} />
             </div>
 
             {/* Sidebar */}
