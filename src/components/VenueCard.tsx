@@ -77,14 +77,6 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
           </div>
         )}
 
-        <div className="flex items-center space-x-4 text-gray-500">
-          {venue.email && (
-            <div className="flex items-center space-x-1">
-              <Mail size={14} />
-              <span className="text-xs">Email</span>
-            </div>
-          )}
-        </div>
       </div>
     </Link>
   )

@@ -155,14 +155,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Logo */}
           <Link
             to="/"
-            className="flex flex-col items-center justify-center space-y-1 text-white hover:text-[#FFCE03] transition-colors"
+            className="flex items-center justify-center text-white hover:text-[#FFCE03] transition-colors"
           >
             <img 
               src="https://assets.softr-files.com/applications/06852328-a343-4027-96ff-d4aff30169c8/assets/3bd00154-80ee-4525-8f04-dd8c544af6e7.png" 
               alt="EventHub" 
               className="h-6 w-auto"
             />
-            <span className="text-xs font-medium">Home</span>
           </Link>
           
           {navigation.filter(item => item.name !== 'Home' && item.name !== 'Dashboard').map((item) => {
