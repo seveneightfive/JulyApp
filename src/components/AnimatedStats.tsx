@@ -112,12 +112,16 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+        <div className="flex flex-col items-center gap-y-8 md:grid md:grid-cols-3 md:gap-8 lg:gap-12">
           {stats.map((stat, index) => (
             <Link
               key={stat.label}
               to={stat.link}
-              className="group block text-center transform hover:scale-105 transition-all duration-300"
+              className={`group block text-center transform hover:scale-105 transition-all duration-300 md:self-auto md:translate-y-0 ${
+                index === 1 ? 'self-end translate-y-2' : 
+                index === 2 ? 'self-start translate-y-4' : 
+                'self-start'
+              }`}
               style={{
                 animationDelay: `${stat.delay}ms`,
                 animation: isVisible ? 'fadeInUp 1s ease-out forwards' : 'none',
