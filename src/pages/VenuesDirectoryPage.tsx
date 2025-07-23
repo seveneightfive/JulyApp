@@ -149,10 +149,10 @@ export const VenuesDirectoryPage: React.FC = () => {
                       <button
                         key={type}
                         onClick={() => toggleType(type)}
-                        className={`p-2 rounded-lg border text-xs transition-colors ${
+                        className={`btn-filter transition-colors text-xs ${
                           selectedTypes.includes(type)
-                            ? 'bg-teal-600 text-white border-teal-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                            ? 'active'
+                            : ''
                         }`}
                       >
                         {type}
@@ -169,10 +169,10 @@ export const VenuesDirectoryPage: React.FC = () => {
                       <button
                         key={neighborhood}
                         onClick={() => toggleNeighborhood(neighborhood)}
-                        className={`p-2 rounded-lg border text-xs transition-colors ${
+                        className={`btn-filter transition-colors text-xs ${
                           selectedNeighborhoods.includes(neighborhood)
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                            ? 'active'
+                            : ''
                         }`}
                       >
                         {neighborhood}
@@ -230,10 +230,10 @@ export const VenuesDirectoryPage: React.FC = () => {
                     <button
                       key={type}
                       onClick={() => toggleType(type)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`btn-filter transition-colors ${
                         selectedTypes.includes(type)
-                          ? 'bg-teal-600 text-white border-teal-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       {type}
@@ -250,10 +250,10 @@ export const VenuesDirectoryPage: React.FC = () => {
                     <button
                       key={neighborhood}
                       onClick={() => toggleNeighborhood(neighborhood)}
-                      className={`px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`btn-filter transition-colors ${
                         selectedNeighborhoods.includes(neighborhood)
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                          ? 'active'
+                          : ''
                       }`}
                     >
                       {neighborhood}
