@@ -33,10 +33,9 @@ export const EventsDirectoryPage: React.FC = () => {
   }, [events, searchQuery, selectedTypes, dateFilter])
 
   const fetchEvents = async () => {
-    // Get current date in local timezone, start of day
+    // Get current date in local timezone, start of today
     const now = new Date()
-    const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const oneDayAgo = new Date(localToday.getTime() - 24 * 60 * 60 * 1000)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     
     const { data, error } = await supabase
       .from('events')
@@ -45,7 +44,7 @@ export const EventsDirectoryPage: React.FC = () => {
         venue:venues(*),
         event_artists(artist:artists(*))
       `)
-      .gte('start_date', oneDayAgo.toISOString())
+      .gte('start_date', today.toISOString())
       .order('start_date', { ascending: true })
 
     if (error) {

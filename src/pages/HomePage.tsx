@@ -37,10 +37,9 @@ export const HomePage: React.FC = () => {
 
   const fetchHomeData = async () => {
     try {
-      // Get current date in local timezone, start of day
+      // Get current date in local timezone, start of today
       const now = new Date()
-      const localToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-      const oneDayAgo = new Date(localToday.getTime() - 24 * 60 * 60 * 1000)
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
       
       // Fetch starred events
       const { data: starredData } = await supabase
@@ -51,7 +50,7 @@ export const HomePage: React.FC = () => {
           event_artists(artist:artists(*))
         `)
         .eq('star', true)
-        .gte('start_date', oneDayAgo.toISOString())
+        .gte('start_date', today.toISOString())
         .order('start_date', { ascending: true })
         .limit(5)
 
@@ -68,7 +67,7 @@ export const HomePage: React.FC = () => {
           event_artists(artist:artists(*))
         `)
         .neq('star', true)
-        .gte('start_date', oneDayAgo.toISOString())
+        .gte('start_date', today.toISOString())
         .order('start_date', { ascending: true })
         .limit(6)
 
