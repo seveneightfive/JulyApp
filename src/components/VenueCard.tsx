@@ -61,7 +61,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
 
         {venue.venue_type && (
           <div className="flex flex-wrap gap-1 mb-4">
-            {venue.venue_types.slice(0, 3).map((type, index) => (
+            {venue.venue_types && venue.venue_types.slice(0, 3).map((type, index) => (
               <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
                 {type}
               </span>
