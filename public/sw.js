@@ -12,13 +12,29 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
+  // For navigation requests (like magic link redirects), always go to network first
+  // to ensure URL hash fragments are properly processed
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
           return response
-        }
-        return fetch(event.request)
-      })
-  )
+        })
+        .catch(() => {
+          // Fallback to cache if network fails
+          return caches.match(event.request)
+        })
+    )
+  } else {
+    // For other requests (assets, etc.), use cache-first strategy
+    event.respondWith(
+      caches.match(event.request)
+        .then((response) => {
+          if (response) {
+            return response
+          }
+          return fetch(event.request)
+        })
+    )
+  }
 })
