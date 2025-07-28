@@ -210,7 +210,7 @@ export const EventsDirectoryPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search events..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C80650]"
                 />
               </div>
               <button
@@ -220,7 +220,7 @@ export const EventsDirectoryPage: React.FC = () => {
                 <Filter size={16} />
                 <span className="text-sm">Filters</span>
                 {activeFiltersCount > 0 && (
-                  <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="text-white text-xs px-2 py-1 rounded-full" style={{ backgroundColor: '#C80650' }}>
                     {activeFiltersCount}
                   </span>
                 )}
@@ -311,7 +311,7 @@ export const EventsDirectoryPage: React.FC = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search events..."
-                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C80650]"
                   />
                 </div>
                 {activeFiltersCount > 0 && (
@@ -392,7 +392,7 @@ export const EventsDirectoryPage: React.FC = () => {
           {/* Events Grid */}
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#C80650' }}></div>
             </div>
           ) : (
             <>
@@ -409,11 +409,11 @@ export const EventsDirectoryPage: React.FC = () => {
                       <div className="sticky top-20 z-30 bg-white shadow-sm flex items-center space-x-4 px-4 py-3">
                         <div className="text-center">
                           <div className="text-sm text-gray-700 font-medium">{monthName}</div>
-                          <div className="text-3xl font-bold text-blue-600">{dayNumber}</div>
+                          <div className="text-3xl font-bold" style={{ color: '#C80650' }}>{dayNumber}</div>
                         </div>
                         <div className="flex-1 h-px bg-gray-200"></div>
                         <div className="text-sm text-gray-500 font-medium">
-                          {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                          <span className="font-bold">{date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}</span>
                         </div>
                       </div>
                       
@@ -544,7 +544,7 @@ const MobileEventCard: React.FC<{ event: Event }> = ({ event }) => {
                 {allArtists.slice(0, 2).map((eventArtist) => (
                   <span
                     key={eventArtist.artist.id}
-                    className="text-xs px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800"
+                    className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-800"
                   >
                     {eventArtist.artist.name}
                   </span>
