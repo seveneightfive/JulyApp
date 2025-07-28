@@ -422,12 +422,12 @@ export const EventDetailPage: React.FC = () => {
                   <div className="space-y-3">
                     {/* Venue Logo */}
                     {event.venue.logo && (
-                      <div className="flex justify-center mb-4">
-                        <div className="w-[150px] h-[150px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                      <div className="mb-4">
+                        <div className="w-[150px] h-[150px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center object-contain">
                           <img
                             src={event.venue.logo}
                             alt={`${event.venue.name} logo`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       </div>
