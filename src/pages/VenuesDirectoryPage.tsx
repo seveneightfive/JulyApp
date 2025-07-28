@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, MapPin, X } from 'lucide-react'
+import { Search, Filter, MapPin, X, ArrowUpDown } from 'lucide-react'
 import { Layout } from '../components/Layout'
 import { VenueCard } from '../components/VenueCard'
 import { supabase, type Venue, trackPageView } from '../lib/supabase'
@@ -7,14 +7,19 @@ import { supabase, type Venue, trackPageView } from '../lib/supabase'
 const VENUE_TYPES = ['Art Gallery', 'Live Music', 'Bar/Tavern', 'Retail', 'Restaurant', 'Event Space', 'Brewery/Winery', 'Outdoor Space', 'Theatre', 'Studio/Class', 'Community Space', 'First Friday ArtWalk', 'Coffee Shop', 'Church', 'Experiences', 'Trades + Services']
 const NEIGHBORHOODS = ['Downtown', 'NOTO', 'North Topeka', 'Oakland', 'Westboro Mart', 'College Hill', 'Lake Shawnee', 'Golden Mile', 'A Short Drive', 'South Topeka', 'Midtown', 'West Topeka']
 
+type SortOption = 'alphabetical-asc' | 'alphabetical-desc' | 'events-desc'
+
 export const VenuesDirectoryPage: React.FC = () => {
   const [venues, setVenues] = useState<Venue[]>([])
   const [filteredVenues, setFilteredVenues] = useState<Venue[]>([])
+  const [venuesWithEventCounts, setVenuesWithEventCounts] = useState<(Venue & { eventCount: number })[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
+  const [sortBy, setSortBy] = useState<SortOption>('alphabetical-asc')
+  const [neighborhoodCounts, setNeighborhoodCounts] = useState<Record<string, number>>({})
 
   useEffect(() => {
     trackPageView('venues-directory')
@@ -22,8 +27,12 @@ export const VenuesDirectoryPage: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    filterVenues()
-  }, [venues, searchQuery, selectedTypes, selectedNeighborhoods])
+    filterAndSortVenues()
+  }, [venues, venuesWithEventCounts, searchQuery, selectedTypes, selectedNeighborhoods, sortBy])
+
+  useEffect(() => {
+    calculateNeighborhoodCounts()
+  }, [venues, searchQuery, selectedTypes])
 
   const fetchVenues = async () => {
     const { data, error } = await supabase
@@ -34,12 +43,60 @@ export const VenuesDirectoryPage: React.FC = () => {
     if (error) {
       console.error('Error fetching venues:', error)
     } else {
-      setVenues(data || [])
+      const venuesData = data || []
+      setVenues(venuesData)
+      await fetchEventCounts(venuesData)
     }
     setLoading(false)
   }
 
-  const filterVenues = () => {
+  const fetchEventCounts = async (venuesData: Venue[]) => {
+    const venuesWithCounts = await Promise.all(
+      venuesData.map(async (venue) => {
+        const { count } = await supabase
+          .from('events')
+          .select('*', { count: 'exact', head: true })
+          .eq('venue_id', venue.id)
+          .gte('start_date', new Date().toISOString())
+
+        return {
+          ...venue,
+          eventCount: count || 0
+        }
+      })
+    )
+    setVenuesWithEventCounts(venuesWithCounts)
+  }
+
+  const calculateNeighborhoodCounts = () => {
+    let baseVenues = venues
+
+    // Apply search and type filters first
+    if (searchQuery) {
+      baseVenues = baseVenues.filter(venue =>
+        venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        venue.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        venue.address.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    if (selectedTypes.length > 0) {
+      baseVenues = baseVenues.filter(venue =>
+        selectedTypes.includes(venue.venue_type)
+      )
+    }
+
+    const counts: Record<string, number> = {}
+    NEIGHBORHOODS.forEach(neighborhood => {
+      counts[neighborhood] = baseVenues.filter(venue => 
+        venue.neighborhood === neighborhood
+      ).length
+    })
+
+    setNeighborhoodCounts(counts)
+  }
+
+  const filterAndSortVenues = () => {
     let filtered = venues
 
     // Search filter
@@ -54,7 +111,7 @@ export const VenuesDirectoryPage: React.FC = () => {
     // Type filter
     if (selectedTypes.length > 0) {
       filtered = filtered.filter(venue =>
-        venue.venue_types?.some(type => selectedTypes.includes(type))
+        selectedTypes.includes(venue.venue_type)
       )
     }
 
@@ -63,6 +120,32 @@ export const VenuesDirectoryPage: React.FC = () => {
       filtered = filtered.filter(venue =>
         venue.neighborhood && selectedNeighborhoods.includes(venue.neighborhood)
       )
+    }
+
+    // Apply sorting
+    const filteredWithCounts = filtered.map(venue => {
+      const venueWithCount = venuesWithEventCounts.find(v => v.id === venue.id)
+      return {
+        ...venue,
+        eventCount: venueWithCount?.eventCount || 0
+      }
+    })
+
+    switch (sortBy) {
+      case 'alphabetical-asc':
+        filteredWithCounts.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case 'alphabetical-desc':
+        filteredWithCounts.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case 'events-desc':
+        filteredWithCounts.sort((a, b) => {
+          if (b.eventCount !== a.eventCount) {
+            return b.eventCount - a.eventCount
+          }
+          return a.name.localeCompare(b.name)
+        })
+        break
     }
 
     setFilteredVenues(filtered)
@@ -88,9 +171,10 @@ export const VenuesDirectoryPage: React.FC = () => {
     setSelectedTypes([])
     setSelectedNeighborhoods([])
     setSearchQuery('')
+    setSortBy('alphabetical-asc')
   }
 
-  const activeFiltersCount = selectedTypes.length + selectedNeighborhoods.length
+  const activeFiltersCount = selectedTypes.length + selectedNeighborhoods.length + (sortBy !== 'alphabetical-asc' ? 1 : 0)
 
   return (
     <Layout>
@@ -175,7 +259,34 @@ export const VenuesDirectoryPage: React.FC = () => {
                             : ''
                         }`}
                       >
-                        {neighborhood}
+                        <div>
+                          <span>{neighborhood}</span>
+                          <span className="ml-2 text-xs opacity-75">({neighborhoodCounts[neighborhood] || 0})</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort Options */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-700 mb-3">Sort By</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { value: 'alphabetical-asc', label: 'A-Z' },
+                      { value: 'alphabetical-desc', label: 'Z-A' },
+                      { value: 'events-desc', label: 'Most Events' }
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSortBy(option.value as SortOption)}
+                        className={`btn-filter transition-colors ${
+                          sortBy === option.value
+                            ? 'active'
+                            : ''
+                        }`}
+                      >
+                        {option.label}
                       </button>
                     ))}
                   </div>
@@ -256,7 +367,37 @@ export const VenuesDirectoryPage: React.FC = () => {
                           : ''
                       }`}
                     >
-                      {neighborhood}
+                      <div>
+                        <span>{neighborhood}</span>
+                        <span className="ml-2 text-xs opacity-75">({neighborhoodCounts[neighborhood] || 0})</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort Options */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-700 mb-3">Sort By</h4>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'alphabetical-asc', label: 'A-Z' },
+                    { value: 'alphabetical-desc', label: 'Z-A' },
+                    { value: 'events-desc', label: 'Most Events' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setSortBy(option.value as SortOption)}
+                      className={`btn-filter transition-colors ${
+                        sortBy === option.value
+                          ? 'active'
+                          : ''
+                      }`}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <ArrowUpDown size={14} />
+                        <span>{option.label}</span>
+                      </div>
                     </button>
                   ))}
                 </div>

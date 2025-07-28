@@ -59,21 +59,13 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
           </span>
         </div>
 
-        {venue.venue_types && venue.venue_types.length > 0 && (
+        {venue.venue_type && (
           <div className="flex flex-wrap gap-1 mb-4">
             {venue.venue_types.slice(0, 3).map((type, index) => (
               <span
-                key={index}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-              >
-                {type}
-              </span>
-            ))}
-            {venue.venue_types.length > 3 && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                +{venue.venue_types.length - 3} more
-              </span>
-            )}
+            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+              {venue.venue_type}
+            </span>
           </div>
         )}
 
