@@ -56,16 +56,6 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist }) => {
               {getArtistTypeIcon(artist.artist_type || 'Musician')}
             </div>
           )}
-          
-          {/* Artist Type Badge - Over Image */}
-          {artist.artist_type && (
-            <div className="absolute top-0 right-0 bg-black/80 text-white px-2 py-1 rounded-bl-lg">
-              <div className="flex items-center space-x-1">
-                {getArtistTypeIcon(artist.artist_type)}
-                <span className="text-xs font-medium">{artist.artist_type}</span>
-              </div>
-            </div>
-          )}
         </div>
       </Link>
 
