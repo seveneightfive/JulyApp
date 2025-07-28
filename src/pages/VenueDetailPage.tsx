@@ -162,38 +162,6 @@ export const VenueDetailPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
-          <div className="flex items-center justify-between p-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex space-x-2">
-              <button
-                onClick={handleShare}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Share2 size={20} />
-              </button>
-              {user && (
-                <button
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                  className={`p-2 rounded-full transition-colors ${
-                    isFollowing 
-                      ? 'bg-red-50 text-red-600' 
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
 
         <div className="max-w-4xl mx-auto">
           {/* Hero Section */}
@@ -253,6 +221,19 @@ export const VenueDetailPage: React.FC = () => {
             <div className="mb-8">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
+                  {/* Venue Logo */}
+                  {venue.logo && (
+                    <div className="mb-4">
+                      <div className="w-[150px] h-[150px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                        <img
+                          src={venue.logo}
+                          alt={`${venue.name} logo`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2">
                     {venue.name}
                   </h1>

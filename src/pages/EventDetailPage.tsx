@@ -237,48 +237,6 @@ export const EventDetailPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
-          <div className="flex items-center justify-between p-4">
-            <button
-              onClick={() => navigate('/events')}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: event.title,
-                      text: event.description,
-                      url: window.location.href
-                    })
-                  } else {
-                    navigator.clipboard.writeText(window.location.href)
-                  }
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Share2 size={20} />
-              </button>
-              {user && (
-                <button
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                  className={`p-2 rounded-full transition-colors ${
-                    isFollowing 
-                      ? 'bg-red-50 text-red-600' 
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
 
         {/* Mobile Hero Image - Full Width */}
         <div className="lg:hidden w-full">
@@ -345,7 +303,7 @@ export const EventDetailPage: React.FC = () => {
                 {/* Event Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-start space-x-3">
-                    <Calendar className="text-blue-600 mt-1" size={20} />
+                    <Calendar className="text-[#FFCE03] lg:text-blue-600 mt-1" size={20} />
                     <div>
                       <p className="font-medium text-gray-900">Date</p>
                       <p className="text-gray-600">{formatDate(event.start_date)}</p>
@@ -354,7 +312,7 @@ export const EventDetailPage: React.FC = () => {
 
                   {(event.event_start_time || event.event_end_time) && (
                     <div className="flex items-start space-x-3">
-                      <Clock className="text-blue-600 mt-1" size={20} />
+                      <Clock className="text-[#FFCE03] lg:text-blue-600 mt-1" size={20} />
                       <div>
                         <p className="font-medium text-gray-900">Time</p>
                         <p className="text-gray-600">
@@ -403,7 +361,7 @@ export const EventDetailPage: React.FC = () => {
                   )}
 
                   <div className="flex items-start space-x-3">
-                    <Eye className="text-blue-600 mt-1" size={20} />
+                    <Eye className="text-[#FFCE03] lg:text-blue-600 mt-1" size={20} />
                     <div>
                       <p className="font-medium text-gray-900">Views</p>
                       <p className="text-gray-600">{pageViews.toLocaleString()}</p>
@@ -415,7 +373,7 @@ export const EventDetailPage: React.FC = () => {
               {/* Featured Artists */}
               {event.event_artists && event.event_artists.length > 0 && (
                 <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
-                  <h2 className="text-xl font-bold text-gray-900 mb-4">Featured Artists</h2>
+                  <h2 className="text-xl font-bold font-oswald text-gray-900 mb-4">FEATURING</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {event.event_artists.map(({ artist }) => (
                       <ArtistCard key={artist.id} artist={artist} />
@@ -461,7 +419,6 @@ export const EventDetailPage: React.FC = () => {
               {/* Venue Details */}
               {event.venue && (
                 <div className="bg-white rounded-xl p-6 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-4">Venue Details</h3>
                   <div className="space-y-3">
                     <div>
                       <h4 className="font-medium text-gray-900">{event.venue.name}</h4>
