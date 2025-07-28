@@ -420,12 +420,27 @@ export const EventDetailPage: React.FC = () => {
               {event.venue && (
                 <div className="bg-white rounded-xl p-6 shadow-sm">
                   <div className="space-y-3">
+                    {/* Venue Logo */}
+                    {event.venue.logo && (
+                      <div className="flex justify-center mb-4">
+                        <div className="w-[150px] h-[150px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                          <img
+                            src={event.venue.logo}
+                            alt={`${event.venue.name} logo`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
                     <div>
                       <h4 className="font-medium text-gray-900">{event.venue.name}</h4>
                       <p className="text-gray-600 text-sm">{event.venue.address}</p>
-                      <p className="text-gray-600 text-sm">
-                        {event.venue.city}, {event.venue.state}
-                      </p>
+                      {event.venue.city !== 'Topeka' && (
+                        <p className="text-gray-600 text-sm">
+                          {event.venue.city}, {event.venue.state}
+                        </p>
+                      )}
                     </div>
                     
                     {event.venue.phone && (
@@ -460,7 +475,6 @@ export const EventDetailPage: React.FC = () => {
 
               {/* Share Section */}
               <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h3 className="font-bold text-gray-900 mb-4">Share Event</h3>
                 <button
                   onClick={() => {
                     if (navigator.share) {
