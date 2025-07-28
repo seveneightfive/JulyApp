@@ -482,6 +482,13 @@ export const EventDetailPage: React.FC = () => {
                         title: event.title,
                         text: event.description,
                         url: window.location.href
+                      }).catch((error) => {
+                        // Only log non-user-cancellation errors
+                        if (error.name !== 'NotAllowedError') {
+                          console.error('Error sharing:', error)
+                        }
+                        // Fallback to clipboard copy on any error
+                        navigator.clipboard.writeText(window.location.href)
                       })
                     } else {
                       navigator.clipboard.writeText(window.location.href)

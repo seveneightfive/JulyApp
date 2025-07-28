@@ -192,7 +192,12 @@ export const ArtistDetailPage: React.FC = () => {
           url: window.location.href
         })
       } catch (error) {
-        console.log('Error sharing:', error)
+        // Only log non-user-cancellation errors
+        if (error.name !== 'NotAllowedError') {
+          console.error('Error sharing:', error)
+        }
+        // Fallback to clipboard copy on any error
+        navigator.clipboard.writeText(window.location.href)
       }
     } else {
       navigator.clipboard.writeText(window.location.href)
