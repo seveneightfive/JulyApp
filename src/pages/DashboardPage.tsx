@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X } from 'lucide-react'
+import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X, Eye } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
@@ -9,7 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase, type Event, type Artist, type Venue, type Follow, type EventRSVP, trackPageView } from '../lib/supabase'
 
 interface DashboardModal {
-  type: 'artists' | 'venues' | 'rsvps' | 'upcoming' | null
+  type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming' | null
   isOpen: boolean
 }
 
@@ -18,11 +18,13 @@ export const DashboardPage: React.FC = () => {
   const [followedArtists, setFollowedArtists] = useState<Artist[]>([])
   const [followedVenues, setFollowedVenues] = useState<Venue[]>([])
   const [rsvpEvents, setRsvpEvents] = useState<Event[]>([])
+  const [interestedEvents, setInterestedEvents] = useState<Event[]>([])
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [stats, setStats] = useState({
     followedArtists: 0,
     followedVenues: 0,
     rsvpEvents: 0,
+    interestedEvents: 0,
     upcomingEvents: 0
   })
   const [loading, setLoading] = useState(true)
@@ -89,6 +91,26 @@ export const DashboardPage: React.FC = () => {
         setRsvpEvents(events)
       }
 
+      // Fetch interested events
+      const { data: interestedRsvps } = await supabase
+        .from('event_rsvps')
+        .select(`
+          *,
+          event:events(
+            *,
+            venue:venues(*),
+            event_artists(artist:artists(*))
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'interested')
+        .gte('event.start_date', new Date().toISOString())
+
+      if (interestedRsvps) {
+        const events = interestedRsvps.map(rsvp => rsvp.event).filter(Boolean)
+        setInterestedEvents(events)
+      }
+
       // Fetch upcoming events from followed artists and venues
       const artistIds = artistFollows?.map(f => f.entity_id) || []
       const venueIds = venueFollows?.map(f => f.entity_id) || []
@@ -143,6 +165,7 @@ export const DashboardPage: React.FC = () => {
         followedArtists: artistFollows?.length || 0,
         followedVenues: venueFollows?.length || 0,
         rsvpEvents: rsvps?.length || 0,
+        interestedEvents: interestedRsvps?.length || 0,
         upcomingEvents: upcomingEventsData.length
       })
 
@@ -153,7 +176,7 @@ export const DashboardPage: React.FC = () => {
     }
   }
 
-  const openModal = (type: 'artists' | 'venues' | 'rsvps' | 'upcoming') => {
+  const openModal = (type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming') => {
     setModal({ type, isOpen: true })
   }
 
@@ -222,6 +245,28 @@ export const DashboardPage: React.FC = () => {
                 <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-600">You haven't RSVP'd to any events yet.</p>
                 <Link to="/events" className="btn-pink mt-4 inline-block">
+                  Browse Events
+                </Link>
+              </div>
+            )}
+          </div>
+        )
+      
+      case 'interested':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Interested Events ({stats.interestedEvents})</h3>
+            {interestedEvents.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                {interestedEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Star size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">You haven't marked any events as interesting yet.</p>
+                <Link to="/events" className="btn-yellow mt-4 inline-block">
                   Browse Events
                 </Link>
               </div>
@@ -300,7 +345,7 @@ export const DashboardPage: React.FC = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
             <button
               onClick={() => openModal('artists')}
               className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
@@ -342,6 +387,21 @@ export const DashboardPage: React.FC = () => {
                 <div className="ml-4">
                   <p className="text-2xl font-bold text-gray-900">{stats.rsvpEvents}</p>
                   <p className="text-sm text-gray-600">RSVPs</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => openModal('interested')}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
+              <div className="flex items-center">
+                <div className="bg-yellow-100 p-3 rounded-lg group-hover:bg-yellow-200 transition-colors">
+                  <Star className="text-yellow-600" size={20} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">{stats.interestedEvents}</p>
+                  <p className="text-sm text-gray-600">Interested</p>
                 </div>
               </div>
             </button>
@@ -391,7 +451,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Empty State */}
-          {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && (
+          {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && stats.interestedEvents === 0 && (
             <div className="text-center py-12 mt-8">
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <Heart size={48} className="mx-auto mb-4 text-gray-400" />
