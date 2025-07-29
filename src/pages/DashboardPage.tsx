@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star } from 'lucide-react'
+import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
 import { ArtistCard } from '../components/ArtistCard'
@@ -7,12 +8,17 @@ import { VenueCard } from '../components/VenueCard'
 import { useAuth } from '../hooks/useAuth'
 import { supabase, type Event, type Artist, type Venue, type Follow, type EventRSVP, trackPageView } from '../lib/supabase'
 
+interface DashboardModal {
+  type: 'artists' | 'venues' | 'rsvps' | 'upcoming' | null
+  isOpen: boolean
+}
+
 export const DashboardPage: React.FC = () => {
   const { user, profile } = useAuth()
   const [followedArtists, setFollowedArtists] = useState<Artist[]>([])
   const [followedVenues, setFollowedVenues] = useState<Venue[]>([])
   const [rsvpEvents, setRsvpEvents] = useState<Event[]>([])
-  const [recommendedEvents, setRecommendedEvents] = useState<Event[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [stats, setStats] = useState({
     followedArtists: 0,
     followedVenues: 0,
@@ -20,6 +26,7 @@ export const DashboardPage: React.FC = () => {
     upcomingEvents: 0
   })
   const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState<DashboardModal>({ type: null, isOpen: false })
 
   useEffect(() => {
     trackPageView('dashboard')
@@ -70,7 +77,7 @@ export const DashboardPage: React.FC = () => {
           event:events(
             *,
             venue:venues(*),
-            event_artists!inner(is_featured, artist:artists(*))
+            event_artists(artist:artists(*))
           )
         `)
         .eq('user_id', user.id)
@@ -82,47 +89,176 @@ export const DashboardPage: React.FC = () => {
         setRsvpEvents(events)
       }
 
-      // Fetch recommended events (from followed artists/venues)
+      // Fetch upcoming events from followed artists and venues
       const artistIds = artistFollows?.map(f => f.entity_id) || []
       const venueIds = venueFollows?.map(f => f.entity_id) || []
 
-      let recommendedEventsQuery = supabase
-        .from('events')
-        .select(`
-          *,
-          venue:venues(*),
-          event_artists(artist:artists(*))
-        `)
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true })
-        .limit(6)
+      let upcomingEventsData: Event[] = []
 
-      if (artistIds.length > 0 || venueIds.length > 0) {
-        if (venueIds.length > 0) {
-          recommendedEventsQuery = recommendedEventsQuery.in('venue_id', venueIds)
+      // Get events from followed venues
+      if (venueIds.length > 0) {
+        const { data: venueEvents } = await supabase
+          .from('events')
+          .select(`
+            *,
+            venue:venues(*),
+            event_artists(artist:artists(*))
+          `)
+          .in('venue_id', venueIds)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+
+        if (venueEvents) {
+          upcomingEventsData = [...upcomingEventsData, ...venueEvents]
         }
-        // Note: For artist-based recommendations, we'd need a more complex query
-        // For now, we'll show venue-based recommendations
       }
 
-      const { data: recommended } = await recommendedEventsQuery
+      // Get events from followed artists
+      if (artistIds.length > 0) {
+        const { data: artistEvents } = await supabase
+          .from('events')
+          .select(`
+            *,
+            venue:venues(*),
+            event_artists!inner(artist:artists(*))
+          `)
+          .in('event_artists.artist_id', artistIds)
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
 
-      if (recommended) {
-        setRecommendedEvents(recommended)
+        if (artistEvents) {
+          // Remove duplicates and merge
+          const existingEventIds = new Set(upcomingEventsData.map(e => e.id))
+          const newEvents = artistEvents.filter(e => !existingEventIds.has(e.id))
+          upcomingEventsData = [...upcomingEventsData, ...newEvents]
+        }
       }
+
+      // Sort by date
+      upcomingEventsData.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+      setUpcomingEvents(upcomingEventsData)
 
       // Update stats
       setStats({
         followedArtists: artistFollows?.length || 0,
         followedVenues: venueFollows?.length || 0,
         rsvpEvents: rsvps?.length || 0,
-        upcomingEvents: recommended?.length || 0
+        upcomingEvents: upcomingEventsData.length
       })
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openModal = (type: 'artists' | 'venues' | 'rsvps' | 'upcoming') => {
+    setModal({ type, isOpen: true })
+  }
+
+  const closeModal = () => {
+    setModal({ type: null, isOpen: false })
+  }
+
+  const renderModalContent = () => {
+    switch (modal.type) {
+      case 'artists':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Following Artists ({stats.followedArtists})</h3>
+            {followedArtists.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                {followedArtists.map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Music size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">You're not following any artists yet.</p>
+                <Link to="/artists" className="btn-pink mt-4 inline-block">
+                  Discover Artists
+                </Link>
+              </div>
+            )}
+          </div>
+        )
+      
+      case 'venues':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Following Venues ({stats.followedVenues})</h3>
+            {followedVenues.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                {followedVenues.map((venue) => (
+                  <VenueCard key={venue.id} venue={venue} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <MapPin size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">You're not following any venues yet.</p>
+                <Link to="/venues" className="btn-yellow mt-4 inline-block">
+                  Discover Venues
+                </Link>
+              </div>
+            )}
+          </div>
+        )
+      
+      case 'rsvps':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Your RSVPs ({stats.rsvpEvents})</h3>
+            {rsvpEvents.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                {rsvpEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">You haven't RSVP'd to any events yet.</p>
+                <Link to="/events" className="btn-pink mt-4 inline-block">
+                  Browse Events
+                </Link>
+              </div>
+            )}
+          </div>
+        )
+      
+      case 'upcoming':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">Upcoming Events ({stats.upcomingEvents})</h3>
+            <p className="text-sm text-gray-600">Events from artists and venues you follow</p>
+            {upcomingEvents.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                {upcomingEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <TrendingUp size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">No upcoming events from your followed artists and venues.</p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
+                  <Link to="/artists" className="btn-pink">
+                    Follow Artists
+                  </Link>
+                  <Link to="/venues" className="btn-yellow">
+                    Follow Venues
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      
+      default:
+        return null
     }
   }
 
@@ -152,26 +288,25 @@ export const DashboardPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b border-gray-100 sticky top-0 z-40">
-          <div className="p-4">
-            <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome back, {profile?.full_name || profile?.username}!</p>
+        {/* Header Banner */}
+        <div className="bg-black text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 className="text-3xl lg:text-4xl font-bold font-oswald mb-2">DASHBOARD</h1>
+            <p className="text-lg text-white/90">
+              Welcome back, {profile?.full_name || profile?.username || 'User'}!
+            </p>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-          {/* Desktop Header */}
-          <div className="hidden lg:block mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-2">Welcome back, {profile?.full_name || profile?.username}!</p>
-          </div>
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-            <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm">
+            <button
+              onClick={() => openModal('artists')}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
               <div className="flex items-center">
-                <div className="bg-purple-100 p-3 rounded-lg">
+                <div className="bg-purple-100 p-3 rounded-lg group-hover:bg-purple-200 transition-colors">
                   <Music className="text-purple-600" size={20} />
                 </div>
                 <div className="ml-4">
@@ -179,11 +314,14 @@ export const DashboardPage: React.FC = () => {
                   <p className="text-sm text-gray-600">Artists</p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm">
+            <button
+              onClick={() => openModal('venues')}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
               <div className="flex items-center">
-                <div className="bg-teal-100 p-3 rounded-lg">
+                <div className="bg-teal-100 p-3 rounded-lg group-hover:bg-teal-200 transition-colors">
                   <MapPin className="text-teal-600" size={20} />
                 </div>
                 <div className="ml-4">
@@ -191,11 +329,14 @@ export const DashboardPage: React.FC = () => {
                   <p className="text-sm text-gray-600">Venues</p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm">
+            <button
+              onClick={() => openModal('rsvps')}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
               <div className="flex items-center">
-                <div className="bg-green-100 p-3 rounded-lg">
+                <div className="bg-green-100 p-3 rounded-lg group-hover:bg-green-200 transition-colors">
                   <Calendar className="text-green-600" size={20} />
                 </div>
                 <div className="ml-4">
@@ -203,11 +344,14 @@ export const DashboardPage: React.FC = () => {
                   <p className="text-sm text-gray-600">RSVPs</p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white rounded-xl p-4 lg:p-6 shadow-sm">
+            <button
+              onClick={() => openModal('upcoming')}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
               <div className="flex items-center">
-                <div className="bg-blue-100 p-3 rounded-lg">
+                <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
                   <TrendingUp className="text-blue-600" size={20} />
                 </div>
                 <div className="ml-4">
@@ -215,106 +359,40 @@ export const DashboardPage: React.FC = () => {
                   <p className="text-sm text-gray-600">Upcoming</p>
                 </div>
               </div>
+            </button>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Link
+                to="/events"
+                className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Calendar className="text-blue-600 mr-3" size={20} />
+                <span className="font-medium text-gray-900">Browse Events</span>
+              </Link>
+              <Link
+                to="/artists"
+                className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Music className="text-purple-600 mr-3" size={20} />
+                <span className="font-medium text-gray-900">Discover Artists</span>
+              </Link>
+              <Link
+                to="/venues"
+                className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <MapPin className="text-teal-600 mr-3" size={20} />
+                <span className="font-medium text-gray-900">Find Venues</span>
+              </Link>
             </div>
           </div>
 
-          {/* RSVP Events */}
-          {rsvpEvents.length > 0 && (
-            <section className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Your Events</h2>
-                <a href="/events" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  View All Events
-                </a>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {rsvpEvents.slice(0, 3).map((event) => (
-                  <EventCard key={event.id} event={event} variant="featured" />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Recommended Events */}
-          {recommendedEvents.length > 0 && (
-            <section className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Recommended for You</h2>
-                <a href="/events" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  View All Events
-                </a>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recommendedEvents.slice(0, 3).map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Followed Artists */}
-          {followedArtists.length > 0 && (
-            <section className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Following</h2>
-                <a href="/artists" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  Discover More Artists
-                </a>
-              </div>
-              
-              {/* Desktop Grid */}
-              <div className="hidden lg:grid grid-cols-3 gap-6">
-                {followedArtists.slice(0, 3).map((artist) => (
-                  <ArtistCard key={artist.id} artist={artist} />
-                ))}
-              </div>
-              
-              {/* Mobile Horizontal Scroll */}
-              <div className="lg:hidden overflow-x-auto">
-                <div className="flex space-x-4 pb-4">
-                  {followedArtists.map((artist) => (
-                    <div key={artist.id} className="flex-shrink-0 w-64">
-                      <ArtistCard artist={artist} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Followed Venues */}
-          {followedVenues.length > 0 && (
-            <section className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Favorite Venues</h2>
-                <a href="/venues" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  Discover More Venues
-                </a>
-              </div>
-              
-              {/* Desktop Grid */}
-              <div className="hidden lg:grid grid-cols-3 gap-6">
-                {followedVenues.slice(0, 3).map((venue) => (
-                  <VenueCard key={venue.id} venue={venue} />
-                ))}
-              </div>
-              
-              {/* Mobile Horizontal Scroll */}
-              <div className="lg:hidden overflow-x-auto">
-                <div className="flex space-x-4 pb-4">
-                  {followedVenues.map((venue) => (
-                    <div key={venue.id} className="flex-shrink-0 w-64">
-                      <VenueCard venue={venue} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          )}
-
           {/* Empty State */}
           {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-12 mt-8">
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <Heart size={48} className="mx-auto mb-4 text-gray-400" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Start Building Your Network</h3>
@@ -322,23 +400,42 @@ export const DashboardPage: React.FC = () => {
                   Follow your favorite artists and venues to get personalized recommendations and never miss an event.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <a
-                    href="/artists"
+                  <Link
+                    to="/artists"
                     className="btn-pink"
                   >
                     Discover Artists
-                  </a>
-                  <a
-                    href="/venues"
+                  </Link>
+                  <Link
+                    to="/venues"
                     className="btn-yellow"
                   >
                     Find Venues
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* Modal */}
+        {modal.isOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div className="flex-1">
+                  {renderModalContent()}
+                </div>
+                <button
+                  onClick={closeModal}
+                  className="ml-4 p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   )
