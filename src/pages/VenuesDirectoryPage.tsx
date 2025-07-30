@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, MapPin, X, ArrowUpDown } from 'lucide-react'
+import { Search, Filter, MapPin, X, ArrowUpDown, ChevronLeft } from 'lucide-react'
 import { Layout } from '../components/Layout'
 import { VenueCard } from '../components/VenueCard'
 import { supabase, type Venue, trackPageView } from '../lib/supabase'
@@ -8,6 +8,7 @@ const VENUE_TYPES = ['Art Gallery', 'Live Music', 'Bar/Tavern', 'Retail', 'Resta
 const NEIGHBORHOODS = ['Downtown', 'NOTO', 'North Topeka', 'Oakland', 'Westboro Mart', 'College Hill', 'Lake Shawnee', 'Golden Mile', 'A Short Drive', 'South Topeka', 'Midtown', 'West Topeka']
 
 type SortOption = 'alphabetical-asc' | 'alphabetical-desc' | 'events-desc'
+type FilterStep = 'main' | 'venue-types' | 'neighborhoods'
 
 export const VenuesDirectoryPage: React.FC = () => {
   const [venues, setVenues] = useState<Venue[]>([])
@@ -20,6 +21,8 @@ export const VenuesDirectoryPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<SortOption>('alphabetical-asc')
   const [neighborhoodCounts, setNeighborhoodCounts] = useState<Record<string, number>>({})
+  const [filterStep, setFilterStep] = useState<FilterStep>('main')
+  const [venueTypeCounts, setVenueTypeCounts] = useState<Record<string, number>>({})
 
   useEffect(() => {
     trackPageView('venues-directory')
@@ -32,6 +35,7 @@ export const VenuesDirectoryPage: React.FC = () => {
 
   useEffect(() => {
     calculateNeighborhoodCounts()
+    calculateVenueTypeCounts()
   }, [venues, searchQuery, selectedTypes])
 
   const fetchVenues = async () => {
@@ -94,6 +98,32 @@ export const VenuesDirectoryPage: React.FC = () => {
     })
 
     setNeighborhoodCounts(counts)
+  }
+
+  const calculateVenueTypeCounts = () => {
+    let baseVenues = venues
+
+    // Apply search and neighborhood filters first
+    if (searchQuery) {
+      baseVenues = baseVenues.filter(venue =>
+        venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        venue.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        venue.address.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    if (selectedNeighborhoods.length > 0) {
+      baseVenues = baseVenues.filter(venue =>
+        venue.neighborhood && selectedNeighborhoods.includes(venue.neighborhood)
+      )
+    }
+
+    const counts: Record<string, number> = {}
+    VENUE_TYPES.forEach(type => {
+      counts[type] = baseVenues.filter(venue => venue.venue_type === type).length
+    })
+
+    setVenueTypeCounts(counts)
   }
 
   const filterAndSortVenues = () => {
@@ -172,9 +202,140 @@ export const VenuesDirectoryPage: React.FC = () => {
     setSelectedNeighborhoods([])
     setSearchQuery('')
     setSortBy('alphabetical-asc')
+    setFilterStep('main')
   }
 
   const activeFiltersCount = selectedTypes.length + selectedNeighborhoods.length + (sortBy !== 'alphabetical-asc' ? 1 : 0)
+
+  const renderFilterContent = () => {
+    switch (filterStep) {
+      case 'main':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Choose Filter Type</h3>
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                onClick={() => setFilterStep('venue-types')}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+              >
+                <div>
+                  <h4 className="font-medium text-gray-900">Venue Types</h4>
+                  <p className="text-sm text-gray-600">Filter by type of venue</p>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {selectedTypes.length > 0 && `${selectedTypes.length} selected`}
+                </div>
+              </button>
+              <button
+                onClick={() => setFilterStep('neighborhoods')}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+              >
+                <div>
+                  <h4 className="font-medium text-gray-900">Neighborhoods</h4>
+                  <p className="text-sm text-gray-600">Filter by location</p>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {selectedNeighborhoods.length > 0 && `${selectedNeighborhoods.length} selected`}
+                </div>
+              </button>
+            </div>
+          </div>
+        )
+      
+      case 'venue-types':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setFilterStep('main')}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <h3 className="text-lg font-semibold text-gray-900">Venue Types</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+              {/* All option */}
+              <button
+                onClick={() => setSelectedTypes([])}
+                className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                  selectedTypes.length === 0
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-gray-900 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-medium">All</div>
+                <div className="text-sm opacity-75">
+                  {Object.values(venueTypeCounts).reduce((sum, count) => sum + count, 0)} venues
+                </div>
+              </button>
+              {VENUE_TYPES.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => toggleType(type)}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    selectedTypes.includes(type)
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-gray-900 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-medium">{type}</div>
+                  <div className="text-sm opacity-75">{venueTypeCounts[type] || 0} venues</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      
+      case 'neighborhoods':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setFilterStep('main')}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <h3 className="text-lg font-semibold text-gray-900">Neighborhoods</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+              {/* All option */}
+              <button
+                onClick={() => setSelectedNeighborhoods([])}
+                className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                  selectedNeighborhoods.length === 0
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-gray-900 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="font-medium">All</div>
+                <div className="text-sm opacity-75">
+                  {Object.values(neighborhoodCounts).reduce((sum, count) => sum + count, 0)} venues
+                </div>
+              </button>
+              {NEIGHBORHOODS.map((neighborhood) => (
+                <button
+                  key={neighborhood}
+                  onClick={() => toggleNeighborhood(neighborhood)}
+                  className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                    selectedNeighborhoods.includes(neighborhood)
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-gray-900 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-medium">{neighborhood}</div>
+                  <div className="text-sm opacity-75">{neighborhoodCounts[neighborhood] || 0} venues</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      
+      default:
+        return null
+    }
+  }
 
   return (
     <Layout>
@@ -196,6 +357,7 @@ export const VenuesDirectoryPage: React.FC = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
+                onMouseDown={() => setFilterStep('main')}
               >
                 <Filter size={16} />
                 <span className="text-sm">Filters</span>
@@ -216,80 +378,18 @@ export const VenuesDirectoryPage: React.FC = () => {
             <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
               <div className="p-6 pb-24">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                  <div className="flex-1">
+                    {renderFilterContent()}
+                  </div>
                   <button
-                    onClick={() => setShowFilters(false)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    onClick={() => {
+                      setShowFilters(false)
+                      setFilterStep('main')
+                    }}
+                    className="ml-4 p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
                   >
                     <X size={20} />
                   </button>
-                </div>
-                
-                {/* Venue Types Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Venue Types</h4>
-                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                    {VENUE_TYPES.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => toggleType(type)}
-                        className={`btn-filter transition-colors text-xs ${
-                          selectedTypes.includes(type)
-                            ? 'active'
-                            : ''
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Neighborhoods Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Neighborhoods</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {NEIGHBORHOODS.map((neighborhood) => (
-                      <button
-                        key={neighborhood}
-                        onClick={() => toggleNeighborhood(neighborhood)}
-                        className={`btn-filter transition-colors text-xs ${
-                          selectedNeighborhoods.includes(neighborhood)
-                            ? 'active'
-                            : ''
-                        }`}
-                      >
-                        <div>
-                          <span>{neighborhood}</span>
-                          <span className="ml-2 text-xs opacity-75">({neighborhoodCounts[neighborhood] || 0})</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort Options */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-700 mb-3">Sort By</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    {[
-                      { value: 'alphabetical-asc', label: 'A-Z' },
-                      { value: 'alphabetical-desc', label: 'Z-A' },
-                      { value: 'events-desc', label: 'Most Events' }
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setSortBy(option.value as SortOption)}
-                        className={`btn-filter transition-colors ${
-                          sortBy === option.value
-                            ? 'active'
-                            : ''
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>
@@ -331,77 +431,7 @@ export const VenuesDirectoryPage: React.FC = () => {
           {/* Filters */}
           <div className="hidden lg:block mb-6">
             <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
-              
-              {/* Venue Types Filter */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Venue Types</h4>
-                <div className="flex flex-wrap gap-2">
-                  {VENUE_TYPES.map((type) => (
-                    <button
-                      key={type}
-                      onClick={() => toggleType(type)}
-                      className={`btn-filter transition-colors ${
-                        selectedTypes.includes(type)
-                          ? 'active'
-                          : ''
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Neighborhoods Filter */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Neighborhoods</h4>
-                <div className="flex flex-wrap gap-2">
-                  {NEIGHBORHOODS.map((neighborhood) => (
-                    <button
-                      key={neighborhood}
-                      onClick={() => toggleNeighborhood(neighborhood)}
-                      className={`btn-filter transition-colors ${
-                        selectedNeighborhoods.includes(neighborhood)
-                          ? 'active'
-                          : ''
-                      }`}
-                    >
-                      <div>
-                        <span>{neighborhood}</span>
-                        <span className="ml-2 text-xs opacity-75">({neighborhoodCounts[neighborhood] || 0})</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sort Options */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-700 mb-3">Sort By</h4>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: 'alphabetical-asc', label: 'A-Z' },
-                    { value: 'alphabetical-desc', label: 'Z-A' },
-                    { value: 'events-desc', label: 'Most Events' }
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => setSortBy(option.value as SortOption)}
-                      className={`btn-filter transition-colors ${
-                        sortBy === option.value
-                          ? 'active'
-                          : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <ArrowUpDown size={14} />
-                        <span>{option.label}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {renderFilterContent()}
             </div>
           </div>
 
