@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Filter, MapPin, X, ArrowUpDown, ChevronLeft } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { VenueCard } from '../components/VenueCard'
 import { supabase, type Venue, trackPageView } from '../lib/supabase'
