@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Filter, Music, X } from 'lucide-react'
+import { Search, Filter, Music, X, Palette, Mic, BookOpen } from 'lucide-react'
 import { Layout } from '../components/Layout'
 import { ArtistCard } from '../components/ArtistCard'
 import { supabase, type Artist, trackPageView } from '../lib/supabase'
@@ -352,11 +352,21 @@ export const ArtistsDirectoryPage: React.FC = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredArtists.map((artist) => (
-                <ArtistCard key={artist.id} artist={artist} />
-              ))}
-            </div>
+            <>
+              {/* Mobile Layout - List Cards */}
+              <div className="lg:hidden space-y-3">
+                {filteredArtists.map((artist) => (
+                  <MobileArtistCard key={artist.id} artist={artist} />
+                ))}
+              </div>
+              
+              {/* Desktop Layout - Grid */}
+              <div className="hidden lg:grid grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredArtists.map((artist) => (
+                  <ArtistCard key={artist.id} artist={artist} />
+                ))}
+              </div>
+            </>
           )}
 
           {!loading && filteredArtists.length === 0 && (
@@ -369,5 +379,97 @@ export const ArtistsDirectoryPage: React.FC = () => {
         </div>
       </div>
     </Layout>
+  )
+}
+
+// Mobile Artist Card Component with horizontal layout
+const MobileArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => {
+  const getArtistTypeIcon = (type: string) => {
+    switch (type) {
+      case 'Musician':
+        return <Music size={16} />
+      case 'Visual':
+        return <Palette size={16} />
+      case 'Performance':
+        return <Mic size={16} />
+      case 'Literary':
+        return <BookOpen size={16} />
+      default:
+        return <Music size={16} />
+    }
+  }
+
+  return (
+    <Link 
+      to={`/artists/${artist.slug}`}
+      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden mx-2"
+    >
+      <div className="flex">
+        {/* Artist Image */}
+        <div className="w-20 h-20 bg-gray-200 overflow-hidden flex-shrink-0">
+          {artist.image_url || artist.avatar_url ? (
+            <img
+              src={artist.image_url || artist.avatar_url}
+              alt={artist.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-blue-100">
+              {getArtistTypeIcon(artist.artist_type || 'Musician')}
+            </div>
+          )}
+        </div>
+
+        {/* Artist Details */}
+        <div className="flex-1 p-3 min-w-0">
+          {/* Artist Name */}
+          <h3 className="font-oswald text-base font-medium text-gray-900 mb-1 line-clamp-1 uppercase tracking-wide">
+            {artist.name.toUpperCase()}
+          </h3>
+
+          {/* Artist Type */}
+          <div className="text-xs text-gray-600 mb-2">
+            {artist.artist_type || 'Musician'}
+          </div>
+
+          {/* Genres/Mediums */}
+          {artist.musical_genres && artist.musical_genres.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {artist.musical_genres.slice(0, 2).map((genre) => (
+                <span
+                  key={genre}
+                  className="text-xs px-1.5 py-0.5 rounded-full bg-black text-white"
+                >
+                  {genre}
+                </span>
+              ))}
+              {artist.musical_genres.length > 2 && (
+                <span className="text-xs text-gray-500">
+                  +{artist.musical_genres.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+
+          {artist.visual_mediums && artist.visual_mediums.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {artist.visual_mediums.slice(0, 2).map((medium) => (
+                <span
+                  key={medium}
+                  className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800"
+                >
+                  {medium}
+                </span>
+              ))}
+              {artist.visual_mediums.length > 2 && (
+                <span className="text-xs text-gray-500">
+                  +{artist.visual_mediums.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
   )
 }
