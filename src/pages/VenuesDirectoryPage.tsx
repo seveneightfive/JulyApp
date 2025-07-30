@@ -396,14 +396,42 @@ export const VenuesDirectoryPage: React.FC = () => {
           </div>
         )}
 
+        {/* Desktop Filter Drawer */}
+        {showFilters && (
+          <div className="hidden lg:block fixed inset-0 z-50 overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowFilters(false)}></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex-1">
+                    {renderFilterContent()}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowFilters(false)
+                      setFilterStep('main')
+                    }}
+                    className="ml-4 p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">
-            <div className="flex items-start justify-between mb-6">
+            <div className="mb-6">
               <div>
                 <h1 className="text-3xl font-bold font-oswald text-gray-900">Venues Directory</h1>
                 <p className="text-gray-600 mt-2">Discover amazing local venues</p>
               </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -415,6 +443,21 @@ export const VenuesDirectoryPage: React.FC = () => {
                     className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
+                  onMouseDown={() => setFilterStep('main')}
+                >
+                  <Filter size={16} />
+                  <span className="text-sm">Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+              <div>
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearFilters}
@@ -428,12 +471,6 @@ export const VenuesDirectoryPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="hidden lg:block mb-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              {renderFilterContent()}
-            </div>
-          </div>
 
           {/* Results */}
           <div className="mb-4">
