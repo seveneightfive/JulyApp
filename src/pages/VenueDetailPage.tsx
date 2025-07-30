@@ -161,160 +161,199 @@ export const VenueDetailPage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
-
-        <div className="max-w-4xl mx-auto">
-          {/* Hero Section */}
-          <div className="aspect-[16/9] lg:aspect-[21/9] relative overflow-hidden">
-            {venue.image_url ? (
-              <img
-                src={venue.image_url}
-                alt={venue.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center">
-                <MapPin size={64} className="text-white opacity-80" />
-              </div>
-            )}
-            
-            {/* Desktop Actions Overlay */}
-            <div className="hidden lg:block absolute top-6 right-6">
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleShare}
-                  className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
-                >
-                  <Share2 size={20} />
-                </button>
-                {user && (
-                  <button
-                    onClick={handleFollow}
-                    disabled={followLoading}
-                    className={`p-3 rounded-full backdrop-blur-sm transition-colors ${
-                      isFollowing 
-                        ? 'bg-red-500/20 text-red-600' 
-                        : 'bg-white/20 text-white hover:bg-white/30'
-                    }`}
-                  >
-                    <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} />
-                  </button>
-                )}
-              </div>
+        
+        {/* Desktop Full-Width Hero */}
+        <div className="hidden lg:block relative h-[60vh] overflow-hidden">
+          {venue.image_url ? (
+            <img
+              src={venue.image_url}
+              alt={venue.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center">
+              <MapPin size={120} className="text-white opacity-80" />
             </div>
-          </div>
-
-          {/* Content */}
-          <div className="bg-white lg:rounded-t-3xl lg:-mt-8 relative z-10 p-6 lg:p-8">
-            {/* Desktop Back Button */}
-            <div className="hidden lg:block mb-6">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <ArrowLeft size={16} className="mr-2" />
-                Back
-              </button>
-            </div>
-
-            {/* Venue Header */}
-            <div className="mb-8">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  {/* Venue Logo */}
-                  {venue.logo && (
-                    <div className="mb-4">
-                      <div className="w-[150px] h-[150px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <img
-                          src={venue.logo}
-                          alt={`${venue.name} logo`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 mb-2">
-                    {venue.name}
+          )}
+          
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+          
+          {/* Venue Name - Reverse Type */}
+          <div className="absolute bottom-0 left-0 right-0 p-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-end justify-between">
+                <div>
+                  <h1 className="text-6xl font-bold text-white drop-shadow-lg font-oswald">
+                    {venue.name.toUpperCase()}
                   </h1>
-                  <div className="flex items-center space-x-4 text-gray-600 mb-4">
-                    <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <div className="flex items-center space-x-4 mt-4">
+                    <span className="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-lg font-medium">
                       {venue.venue_type}
                     </span>
                     {venue.capacity && (
-                      <div className="flex items-center">
-                        <Users size={16} className="mr-1" />
-                        <span className="text-sm">Capacity: {venue.capacity}</span>
+                      <div className="flex items-center text-white/90">
+                        <Users size={20} className="mr-2" />
+                        <span className="text-lg">Capacity: {venue.capacity}</span>
                       </div>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-start text-gray-700">
-                      <MapPin size={20} className="mr-3 text-gray-400 mt-0.5" />
-                      <div>
-                        <div className="font-medium">{venue.address}</div>
-                        <div className="text-sm text-gray-500">
-                          {venue.city}, {venue.state} {venue.country}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-6">
-                      {venue.phone && (
-                        <a
-                          href={`tel:${venue.phone}`}
-                          className="flex items-center text-blue-600 hover:text-blue-700"
-                        >
-                          <Phone size={16} className="mr-2" />
-                          <span className="text-sm">{venue.phone}</span>
-                        </a>
-                      )}
-                      {venue.website && (
-                        <a
-                          href={venue.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-blue-600 hover:text-blue-700"
-                        >
-                          <Globe size={16} className="mr-2" />
-                          <span className="text-sm">Website</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={handleShare}
+                    className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                  >
+                    <Share2 size={24} />
+                  </button>
+                  {user && (
+                    <button
+                      onClick={handleFollow}
+                      disabled={followLoading}
+                      className={`p-3 rounded-full backdrop-blur-sm transition-colors ${
+                        isFollowing 
+                          ? 'bg-red-500 text-white' 
+                          : 'bg-white/20 text-white hover:bg-white/30'
+                      }`}
+                    >
+                      <Heart size={24} fill={isFollowing ? 'currentColor' : 'none'} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Description */}
-            {venue.description && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">About This Venue</h2>
-                <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {venue.description}
-                  </p>
+        {/* Mobile Hero */}
+        <div className="lg:hidden aspect-[16/9] relative overflow-hidden">
+          {venue.image_url ? (
+            <img
+              src={venue.image_url}
+              alt={venue.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-teal-500 to-blue-600 flex items-center justify-center">
+              <MapPin size={64} className="text-white opacity-80" />
+            </div>
+          )}
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+          
+          <div className="absolute bottom-4 left-4 right-4">
+            <h1 className="text-2xl font-bold text-white font-oswald">
+              {venue.name.toUpperCase()}
+            </h1>
+            <div className="flex items-center mt-2">
+              <span className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
+                {venue.venue_type}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:block bg-white border-b">
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <button
+              onClick={() => navigate('/venues')}
+              className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            >
+              <ArrowLeft size={20} className="mr-2" />
+              Back to Venues
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2">
+              {/* Venue Info */}
+              <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
+                {/* Venue Logo */}
+                {venue.logo && (
+                  <div className="mb-6">
+                    <div className="w-[150px] h-[150px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                      <img
+                        src={venue.logo}
+                        alt={`${venue.name} logo`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-4">
+                  <div className="flex items-start text-gray-700">
+                    <MapPin size={20} className="mr-3 text-gray-400 mt-0.5" />
+                    <div>
+                      <div className="font-medium">{venue.address}</div>
+                      <div className="text-sm text-gray-500">
+                        {venue.city}, {venue.state} {venue.country}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-6">
+                    {venue.phone && (
+                      <a
+                        href={`tel:${venue.phone}`}
+                        className="flex items-center text-blue-600 hover:text-blue-700"
+                      >
+                        <Phone size={16} className="mr-2" />
+                        <span className="text-sm">{venue.phone}</span>
+                      </a>
+                    )}
+                    {venue.website && (
+                      <a
+                        href={venue.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center text-blue-600 hover:text-blue-700"
+                      >
+                        <Globe size={16} className="mr-2" />
+                        <span className="text-sm">Website</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Upcoming Events */}
-            {events.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Upcoming Events</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {events.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
+              {/* Description */}
+              {venue.description && (
+                <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">About This Venue</h2>
+                  <div className="prose prose-gray max-w-none">
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                      {venue.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Contact Information */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
-              <div className="bg-gray-50 rounded-xl p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Upcoming Events */}
+              {events.length > 0 && (
+                <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Upcoming Events</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {events.map((event) => (
+                      <EventCard key={event.id} event={event} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div className="bg-white rounded-xl p-6 shadow-sm">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                <div className="space-y-4">
                   <div>
                     <h3 className="font-medium text-gray-900 mb-2">Address</h3>
                     <p className="text-gray-600">
@@ -322,35 +361,35 @@ export const VenueDetailPage: React.FC = () => {
                       {venue.city}, {venue.state} {venue.country}
                     </p>
                   </div>
-                  <div className="space-y-3">
-                    {venue.phone && (
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Phone</h3>
-                        <a
-                          href={`tel:${venue.phone}`}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          {venue.phone}
-                        </a>
-                      </div>
-                    )}
-                    {venue.email && (
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">Email</h3>
-                        <a
-                          href={`mailto:${venue.email}`}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          {venue.email}
-                        </a>
-                      </div>
-                    )}
-                  </div>
+                  {venue.phone && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-1">Phone</h3>
+                      <a
+                        href={`tel:${venue.phone}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {venue.phone}
+                      </a>
+                    </div>
+                  )}
+                  {venue.email && (
+                    <div>
+                      <h3 className="font-medium text-gray-900 mb-1">Email</h3>
+                      <a
+                        href={`mailto:${venue.email}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {venue.email}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Reviews Section */}
+          {/* Reviews Section */}
+          <div className="mt-8">
             <ReviewSection entityType="venue" entityId={venue.id} />
           </div>
         </div>
