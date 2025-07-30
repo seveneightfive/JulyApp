@@ -162,14 +162,19 @@ export const trackPageView = async (pageType: string, pageId?: string) => {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     
-    await supabase
+    const { error } = await supabase
       .from('page_views')
       .insert({
         page_type: pageType,
         page_id: pageId,
         user_id: user?.id
       })
+    
+    if (error) {
+      console.warn('Page view tracking failed:', error.message)
+    }
   } catch (error) {
-    console.error('Error tracking page view:', error)
+    // Silently handle network/service errors to prevent disrupting user experience
+    console.warn('Page view tracking unavailable:', error instanceof Error ? error.message : 'Unknown error')
   }
 }
