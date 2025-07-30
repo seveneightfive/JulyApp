@@ -424,15 +424,13 @@ export const VenuesDirectoryPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {/* Desktop Header */}
           <div className="hidden lg:block mb-8">
-            <div className="mb-6">
-              <div>
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex-1">
                 <h1 className="text-3xl font-bold font-oswald text-gray-900">Venues Directory</h1>
                 <p className="text-gray-600 mt-2">Discover amazing local venues</p>
               </div>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              
+              <div className="flex items-center space-x-4 ml-8">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                   <input
@@ -443,7 +441,8 @@ export const VenuesDirectoryPage: React.FC = () => {
                     className="w-80 pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <button
+                <div className="flex items-center space-x-4">
+                  <button
                   onClick={() => setShowFilters(!showFilters)}
                   className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-lg flex-shrink-0"
                   onMouseDown={() => setFilterStep('main')}
@@ -455,18 +454,17 @@ export const VenuesDirectoryPage: React.FC = () => {
                       {activeFiltersCount}
                     </span>
                   )}
-                </button>
-              </div>
-              <div>
-                {activeFiltersCount > 0 && (
-                  <button
+                  </button>
+                  {activeFiltersCount > 0 && (
+                    <button
                     onClick={clearFilters}
                     className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
                   >
                     <X size={16} />
                     <span>Clear Filters</span>
                   </button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>

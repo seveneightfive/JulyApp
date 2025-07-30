@@ -54,7 +54,7 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
         
         {/* Event Count Badge - Top Right, overlapping image by 50% */}
         {upcomingEventsCount > 0 && (
-          <div className="absolute -top-3 -right-3 z-10">
+          <div className="absolute top-2 right-2 z-10">
             <div 
               className="w-8 h-8 rounded-full flex items-center justify-center text-black text-sm font-bold shadow-lg"
               style={{ backgroundColor: '#FFCE03' }}
