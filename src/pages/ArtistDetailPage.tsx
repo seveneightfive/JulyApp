@@ -431,10 +431,41 @@ export const ArtistDetailPage: React.FC = () => {
               {events.length > 0 && (
                 <section className="bg-white rounded-xl p-6 shadow-sm">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Events</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {events.map((event) => (
-                      <EventCard key={event.id} event={event} />
-                    ))}
+                  <div className="space-y-4">
+                    {events.map((event) => {
+                      const eventDate = new Date(event.start_date)
+                      const monthShort = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+                      const dayNumber = eventDate.getDate()
+                      
+                      return (
+                        <Link
+                          key={event.id}
+                          to={`/events/${event.slug}`}
+                          className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors group"
+                        >
+                          {/* Date Box */}
+                          <div className="bg-[#FFCE03] rounded-lg p-3 text-center flex-shrink-0 w-16">
+                            <div className="text-xs font-medium text-black">{monthShort}</div>
+                            <div className="text-xl font-bold text-black">{dayNumber}</div>
+                          </div>
+                          
+                          {/* Event Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-600 mb-1">
+                              {event.venue?.name}
+                            </div>
+                            <div className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
+                              {event.title}
+                            </div>
+                            {event.event_start_time && (
+                              <div className="text-sm text-gray-500">
+                                {event.event_start_time}
+                              </div>
+                            )}
+                          </div>
+                        </Link>
+                      )
+                    })}
                   </div>
                 </section>
               )}
