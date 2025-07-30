@@ -66,15 +66,6 @@ export const VenueCard: React.FC<VenueCardProps> = ({ venue }) => {
       </div>
       
       <div className="p-6 relative">
-        {/* Hide event count badge if it's 0 */}
-        {upcomingEventsCount === 0 && (
-          <img
-            src={venue.image_url}
-            alt={venue.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        )}
-        
         <h3 className="font-oswald text-xl font-medium text-gray-900 mb-2 group-hover:text-blue-600 transition-colors uppercase tracking-wide">
           {venue.name.toUpperCase()}
         </h3>
