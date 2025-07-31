@@ -301,6 +301,23 @@ export const AnnouncementBanner: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {visibleAnnouncements.length > 1 && (
+          <div className="flex justify-center space-x-2 pb-4">
+            {visibleAnnouncements.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setCurrentIndex(index)
+                  setIsAutoScrolling(false)
+                }}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === currentIndex ? 'bg-white' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
