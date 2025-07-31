@@ -1,12 +1,12 @@
 {
-  "name": "EventHub - Events & Artists Directory",
-  "short_name": "EventHub",
-  "description": "Discover amazing events, artists, and venues in your area",
+  "name": "seveneightfive magazine",
+  "short_name": "785 MAG",
+  "description": "Discover amazing events, artists, and venues in Topeka",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3B82F6",
-  "orientation": "portrait-primary",
+  "orientation": "standalone",
   "icons": [
     {
       "src": "/icon-192.png",
