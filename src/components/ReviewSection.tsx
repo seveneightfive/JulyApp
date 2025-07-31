@@ -247,15 +247,6 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ entityType, entity
         </form>
       )}
 
-            {review.image_url && (
-              <div className="mb-3">
-                <img
-                  src={review.image_url}
-                  alt="Review"
-                  className="w-full max-w-md h-48 object-cover rounded-lg"
-                />
-              </div>
-            )}
       <div className="space-y-4">
         {reviews.map((review) => (
           <div key={review.id} className="border-b border-gray-200 pb-4 last:border-b-0">
@@ -282,6 +273,16 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({ entityType, entity
             
             {review.title && (
               <h4 className="font-medium text-gray-900 mb-2">{review.title}</h4>
+            )}
+            
+            {review.image_url && (
+              <div className="mb-3">
+                <img
+                  src={review.image_url}
+                  alt="Review"
+                  className="w-full max-w-md h-48 object-cover rounded-lg"
+                />
+              </div>
             )}
             
             {review.content && (
