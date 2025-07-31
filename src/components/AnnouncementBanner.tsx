@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight, Megaphone, Heart, ThumbsUp, ExternalLink } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Megaphone, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { supabase, type Announcement, type AnnouncementReaction } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -10,11 +10,13 @@ export const AnnouncementBanner: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
   const [isAutoScrolling, setIsAutoScrolling] = useState(true)
-  const [reactionCounts, setReactionCounts] = useState<Record<string, { heart: number, thumbs_up: number }>>({})
+  const [reactionCounts, setReactionCounts] = useState<Record<string, { no: number, yes: number }>>({})
   const [userReactions, setUserReactions] = useState<Record<string, string[]>>({})
+  const [hiddenAnnouncements, setHiddenAnnouncements] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchAnnouncements()
+    loadHiddenAnnouncements()
   }, [])
 
   useEffect(() => {
@@ -25,6 +27,41 @@ export const AnnouncementBanner: React.FC = () => {
       return () => clearInterval(interval)
     }
   }, [announcements.length, isAutoScrolling])
+
+  const loadHiddenAnnouncements = () => {
+    if (!user) {
+      // Load from cookies for non-logged in users
+      const hiddenCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('hiddenAnnouncements='))
+      
+      if (hiddenCookie) {
+        try {
+          const hiddenIds = JSON.parse(decodeURIComponent(hiddenCookie.split('=')[1]))
+          setHiddenAnnouncements(new Set(hiddenIds))
+        } catch (error) {
+          console.error('Error parsing hidden announcements cookie:', error)
+        }
+      }
+    }
+  }
+
+  const saveHiddenAnnouncement = (announcementId: string) => {
+    if (!user) {
+      // Save to cookies for non-logged in users
+      const newHidden = new Set([...hiddenAnnouncements, announcementId])
+      setHiddenAnnouncements(newHidden)
+      
+      const hiddenArray = Array.from(newHidden)
+      const expires = new Date()
+      expires.setFullYear(expires.getFullYear() + 1) // 1 year expiry
+      
+      document.cookie = `hiddenAnnouncements=${encodeURIComponent(JSON.stringify(hiddenArray))}; expires=${expires.toUTCString()}; path=/`
+    } else {
+      // For logged in users, it's handled by the database reaction
+      setHiddenAnnouncements(new Set([...hiddenAnnouncements, announcementId]))
+    }
+  }
 
   const fetchAnnouncements = async () => {
     const { data } = await supabase
@@ -52,14 +89,18 @@ export const AnnouncementBanner: React.FC = () => {
       .select('announcement_id, reaction_type')
       .in('announcement_id', announcementIds)
 
-    const counts: Record<string, { heart: number, thumbs_up: number }> = {}
+    const counts: Record<string, { no: number, yes: number }> = {}
     announcementIds.forEach(id => {
-      counts[id] = { heart: 0, thumbs_up: 0 }
+      counts[id] = { no: 0, yes: 0 }
     })
 
     data?.forEach(reaction => {
       if (counts[reaction.announcement_id]) {
-        counts[reaction.announcement_id][reaction.reaction_type as 'heart' | 'thumbs_up']++
+        if (reaction.reaction_type === 'thumbs_up') {
+          counts[reaction.announcement_id].yes++
+        } else if (reaction.reaction_type === 'heart') {
+          counts[reaction.announcement_id].no++
+        }
       }
     })
 
@@ -84,23 +125,17 @@ export const AnnouncementBanner: React.FC = () => {
     })
 
     setUserReactions(reactions)
+
+    // Hide announcements that logged-in users have voted on
+    const votedAnnouncementIds = Object.keys(reactions)
+    if (votedAnnouncementIds.length > 0) {
+      setHiddenAnnouncements(prev => new Set([...prev, ...votedAnnouncementIds]))
+    }
   }
 
   const handleReaction = async (announcementId: string, reactionType: 'heart' | 'thumbs_up') => {
-    if (!user) return
-
-    const userHasReaction = userReactions[announcementId]?.includes(reactionType)
-
-    if (userHasReaction) {
-      // Remove reaction
-      await supabase
-        .from('announcement_reactions')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('announcement_id', announcementId)
-        .eq('reaction_type', reactionType)
-    } else {
-      // Add reaction
+    // Track the vote
+    if (user) {
       await supabase
         .from('announcement_reactions')
         .insert({
@@ -108,11 +143,25 @@ export const AnnouncementBanner: React.FC = () => {
           announcement_id: announcementId,
           reaction_type: reactionType
         })
+    } else {
+      // For non-logged in users, we still track in the database but without user_id
+      await supabase
+        .from('announcement_reactions')
+        .insert({
+          user_id: null,
+          announcement_id: announcementId,
+          reaction_type: reactionType
+        })
     }
+
+    // Hide the announcement
+    saveHiddenAnnouncement(announcementId)
 
     // Refresh data
     fetchReactionCounts([announcementId])
-    fetchUserReactions([announcementId])
+    if (user) {
+      fetchUserReactions([announcementId])
+    }
   }
 
   const nextAnnouncement = () => {
@@ -125,12 +174,17 @@ export const AnnouncementBanner: React.FC = () => {
     setCurrentIndex((prev) => (prev - 1 + announcements.length) % announcements.length)
   }
 
-  if (!isVisible || announcements.length === 0) {
+  // Filter out hidden announcements
+  const visibleAnnouncements = announcements.filter(announcement => 
+    !hiddenAnnouncements.has(announcement.id)
+  )
+
+  if (!isVisible || visibleAnnouncements.length === 0) {
     return null
   }
 
-  const currentAnnouncement = announcements[currentIndex]
-  const currentReactions = reactionCounts[currentAnnouncement?.id] || { heart: 0, thumbs_up: 0 }
+  const currentAnnouncement = visibleAnnouncements[currentIndex % visibleAnnouncements.length]
+  const currentReactions = reactionCounts[currentAnnouncement?.id] || { no: 0, yes: 0 }
   const currentUserReactions = userReactions[currentAnnouncement?.id] || []
 
   const getEntityLink = (announcement: Announcement) => {
@@ -170,7 +224,7 @@ export const AnnouncementBanner: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-2">
-              {announcements.length > 1 && (
+              {visibleAnnouncements.length > 1 && (
                 <button
                   onClick={prevAnnouncement}
                   className="p-1 hover:bg-white/20 rounded-full transition-colors"
@@ -181,7 +235,7 @@ export const AnnouncementBanner: React.FC = () => {
                 </button>
               )}
               
-              {announcements.length > 1 && (
+              {visibleAnnouncements.length > 1 && (
                 <button
                   onClick={nextAnnouncement}
                   className="p-1 hover:bg-white/20 rounded-full transition-colors"
@@ -233,38 +287,33 @@ export const AnnouncementBanner: React.FC = () => {
               )}
             </div>
             
-            {/* Reactions */}
-            <div className="flex items-center justify-center space-x-4">
-              <button
-                onClick={() => handleReaction(currentAnnouncement.id, 'heart')}
-                className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
-                  currentUserReactions.includes('heart')
-                    ? 'bg-red-500 text-white'
-                    : 'bg-white/20 text-white hover:bg-white/30'
-                }`}
-              >
-                <Heart size={14} fill={currentUserReactions.includes('heart') ? 'currentColor' : 'none'} />
-                <span className="text-sm">{currentReactions.heart}</span>
-              </button>
-              
-              <button
-                onClick={() => handleReaction(currentAnnouncement.id, 'thumbs_up')}
-                className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
-                  currentUserReactions.includes('thumbs_up')
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white/20 text-white hover:bg-white/30'
-                }`}
-              >
-                <ThumbsUp size={14} fill={currentUserReactions.includes('thumbs_up') ? 'currentColor' : 'none'} />
-                <span className="text-sm">{currentReactions.thumbs_up}</span>
-              </button>
+            {/* Relevance Question and Voting */}
+            <div className="space-y-2">
+              <p className="text-sm text-white/90">Did you find this announcement relevant?</p>
+              <div className="flex items-center justify-center space-x-4">
+                <button
+                  onClick={() => handleReaction(currentAnnouncement.id, 'heart')}
+                  className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center space-x-2"
+                >
+                  <span>No</span>
+                  <span className="text-xs">({currentReactions.no})</span>
+                </button>
+                
+                <button
+                  onClick={() => handleReaction(currentAnnouncement.id, 'thumbs_up')}
+                  className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center space-x-2"
+                >
+                  <span>Yes</span>
+                  <span className="text-xs">({currentReactions.yes})</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {announcements.length > 1 && (
+        {visibleAnnouncements.length > 1 && (
           <div className="flex justify-center space-x-2 pb-3">
-            {announcements.map((_, index) => (
+            {visibleAnnouncements.map((_, index) => (
               <button
                 key={index}
                 onClick={() => {

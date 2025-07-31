@@ -146,7 +146,7 @@ export interface Announcement {
 
 export interface AnnouncementReaction {
   id: string
-  user_id?: string
+  user_id?: string | null
   announcement_id: string
   reaction_type: 'heart' | 'thumbs_up'
   created_at?: string
