@@ -294,25 +294,26 @@ export const ArtistDetailPage: React.FC = () => {
                 
                 {/* Actions */}
                 <div className="flex items-center space-x-4">
+                  {user && (
+                    <button
+                      onClick={handleFollow}
+                      disabled={followLoading}
+                      className={`px-6 py-3 rounded-full backdrop-blur-sm transition-colors font-medium ${
+                        isFollowing 
+                          ? 'bg-red-500 text-white hover:bg-red-600' 
+                          : 'bg-white/20 text-white hover:bg-white/30'
+                      } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <Heart size={20} fill={isFollowing ? 'currentColor' : 'none'} className="mr-2 inline" />
+                      {isFollowing ? 'Following' : 'Follow'}
+                    </button>
+                  )}
                   <button
                     onClick={handleShare}
                     className="bg-white/20 backdrop-blur-sm text-white p-3 rounded-full hover:bg-white/30 transition-colors"
                   >
                     <Share2 size={24} />
                   </button>
-                  {user && (
-                    <button
-                      onClick={handleFollow}
-                      disabled={followLoading}
-                      className={`p-3 rounded-full backdrop-blur-sm transition-colors ${
-                        isFollowing 
-                          ? 'bg-red-500 text-white' 
-                          : 'bg-white/20 text-white hover:bg-white/30'
-                      }`}
-                    >
-                      <Heart size={24} fill={isFollowing ? 'currentColor' : 'none'} />
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -349,6 +350,24 @@ export const ArtistDetailPage: React.FC = () => {
             )}
             {!artist.tagline && artist.genre && (
               <p className="text-white/90">{artist.genre}</p>
+            )}
+            
+            {/* Mobile Follow Button */}
+            {user && (
+              <div className="mt-3">
+                <button
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`px-4 py-2 rounded-full backdrop-blur-sm transition-colors font-medium text-sm ${
+                    isFollowing 
+                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Heart size={16} fill={isFollowing ? 'currentColor' : 'none'} className="mr-2 inline" />
+                  {isFollowing ? 'Following' : 'Follow'}
+                </button>
+              </div>
             )}
           </div>
         </div>

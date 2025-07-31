@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Filter, Music, X, Palette, Mic, BookOpen } from 'lucide-react'
+import { Search, Filter, Music, X, Palette, Mic, BookOpen, Heart } from 'lucide-react'
 import { Layout } from '../components/Layout'
 import { ArtistCard } from '../components/ArtistCard'
+import { useAuth } from '../hooks/useAuth'
 import { supabase, type Artist, trackPageView } from '../lib/supabase'
 
 const ARTIST_TYPES = ['Musician', 'Visual', 'Performance', 'Literary']
@@ -385,12 +386,25 @@ export const ArtistsDirectoryPage: React.FC = () => {
 
 // Mobile Artist Card Component with horizontal layout
 const MobileArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => {
+  const { user } = useAuth()
   const [upcomingEventsCount, setUpcomingEventsCount] = useState(0)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
 
   useEffect(() => {
     fetchUpcomingEventsCount()
+    if (user) {
+      checkFollowStatus()
+    }
   }, [artist.id])
 
+  useEffect(() => {
+    if (user) {
+      checkFollowStatus()
+    } else {
+      setIsFollowing(false)
+    }
+  }, [user])
   const fetchUpcomingEventsCount = async () => {
     const { count } = await supabase
       .from('event_artists')
@@ -401,6 +415,51 @@ const MobileArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => {
     setUpcomingEventsCount(count || 0)
   }
 
+  const checkFollowStatus = async () => {
+    if (!user) return
+
+    const { data } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('entity_type', 'artist')
+      .eq('entity_id', artist.id)
+      .single()
+
+    setIsFollowing(!!data)
+  }
+
+  const handleFollow = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!user) return
+
+    setFollowLoading(true)
+    try {
+      if (isFollowing) {
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('entity_type', 'artist')
+          .eq('entity_id', artist.id)
+      } else {
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            entity_type: 'artist',
+            entity_id: artist.id
+          })
+      }
+      setIsFollowing(!isFollowing)
+    } catch (error) {
+      console.error('Error following artist:', error)
+    } finally {
+      setFollowLoading(false)
+    }
+  }
   const getArtistTypeIcon = (type: string) => {
     switch (type) {
       case 'Musician':
@@ -498,6 +557,24 @@ const MobileArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => {
             </div>
           )}
         </div>
+        
+        {/* Follow Button */}
+        {user && (
+          <div className="flex items-center pr-3">
+            <button
+              onClick={handleFollow}
+              disabled={followLoading}
+              className={`p-2 rounded-full transition-colors ${
+                isFollowing 
+                  ? 'text-red-500 hover:text-red-600' 
+                  : 'text-gray-400 hover:text-red-500'
+              } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={isFollowing ? 'Unfollow artist' : 'Follow artist'}
+            >
+              <Heart size={14} fill={isFollowing ? 'currentColor' : 'none'} />
+            </button>
+          </div>
+        )}
       </div>
     </Link>
   )
