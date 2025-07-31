@@ -23,12 +23,14 @@ export const AnnouncementBanner: React.FC = () => {
     if (announcements.length > 1 && isAutoScrolling) {
       const interval = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % announcements.length)
-      }, 5000)
+      }, 6000)
       return () => clearInterval(interval)
     }
   }, [announcements.length, isAutoScrolling])
 
   const loadHiddenAnnouncements = () => {
+    const now = new Date().getTime()
+    
     if (!user) {
       // Load from cookies for non-logged in users
       const hiddenCookie = document.cookie
@@ -37,28 +39,80 @@ export const AnnouncementBanner: React.FC = () => {
       
       if (hiddenCookie) {
         try {
-          const hiddenIds = JSON.parse(decodeURIComponent(hiddenCookie.split('=')[1]))
-          setHiddenAnnouncements(new Set(hiddenIds))
+          const hiddenData = JSON.parse(decodeURIComponent(hiddenCookie.split('=')[1]))
+          const validIds = Object.keys(hiddenData).filter(id => hiddenData[id] > now)
+          setHiddenAnnouncements(new Set(validIds))
         } catch (error) {
           console.error('Error parsing hidden announcements cookie:', error)
         }
+      }
+    } else {
+      // Load from localStorage for logged in users
+      try {
+        const hiddenData = JSON.parse(localStorage.getItem('hiddenAnnouncements') || '{}')
+        const validIds = Object.keys(hiddenData).filter(id => hiddenData[id] > now)
+        setHiddenAnnouncements(new Set(validIds))
+        
+        // Clean up expired entries
+        const cleanedData = {}
+        validIds.forEach(id => {
+          cleanedData[id] = hiddenData[id]
+        })
+        localStorage.setItem('hiddenAnnouncements', JSON.stringify(cleanedData))
+      } catch (error) {
+        console.error('Error loading hidden announcements from localStorage:', error)
       }
     }
   }
 
   const saveHiddenAnnouncement = (announcementId: string) => {
+    const now = new Date()
+    const expiryTime = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours from now
+    
     if (!user) {
       // Save to cookies for non-logged in users
-      const newHidden = new Set([...hiddenAnnouncements, announcementId])
-      setHiddenAnnouncements(newHidden)
+      const hiddenData = { [announcementId]: expiryTime.getTime() }
       
-      const hiddenArray = Array.from(newHidden)
-      const expires = new Date()
-      expires.setFullYear(expires.getFullYear() + 1) // 1 year expiry
+      // Get existing hidden announcements from cookie
+      const existingCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('hiddenAnnouncements='))
       
-      document.cookie = `hiddenAnnouncements=${encodeURIComponent(JSON.stringify(hiddenArray))}; expires=${expires.toUTCString()}; path=/`
+      if (existingCookie) {
+        try {
+          const existingData = JSON.parse(decodeURIComponent(existingCookie.split('=')[1]))
+          Object.assign(hiddenData, existingData)
+        } catch (error) {
+          console.error('Error parsing existing hidden announcements:', error)
+        }
+      }
+      
+      // Clean up expired entries
+      Object.keys(hiddenData).forEach(id => {
+        if (hiddenData[id] < now.getTime()) {
+          delete hiddenData[id]
+        }
+      })
+      
+      const cookieExpires = new Date()
+      cookieExpires.setFullYear(cookieExpires.getFullYear() + 1)
+      
+      document.cookie = `hiddenAnnouncements=${encodeURIComponent(JSON.stringify(hiddenData))}; expires=${cookieExpires.toUTCString()}; path=/`
+      
+      setHiddenAnnouncements(new Set([...hiddenAnnouncements, announcementId]))
     } else {
-      // For logged in users, it's handled by the database reaction
+      // For logged in users, save to localStorage with expiry
+      const hiddenData = JSON.parse(localStorage.getItem('hiddenAnnouncements') || '{}')
+      hiddenData[announcementId] = expiryTime.getTime()
+      
+      // Clean up expired entries
+      Object.keys(hiddenData).forEach(id => {
+        if (hiddenData[id] < now.getTime()) {
+          delete hiddenData[id]
+        }
+      })
+      
+      localStorage.setItem('hiddenAnnouncements', JSON.stringify(hiddenData))
       setHiddenAnnouncements(new Set([...hiddenAnnouncements, announcementId]))
     }
   }
@@ -214,10 +268,10 @@ export const AnnouncementBanner: React.FC = () => {
   }
 
   return (
-    <div className="bg-black text-white relative overflow-hidden">
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-black text-white relative overflow-hidden border-b-4 border-white">
+      <div className="relative w-full lg:max-w-7xl lg:mx-auto px-0 lg:px-8">
         <div className="py-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 px-4 lg:px-0">
             <div className="flex items-center space-x-2">
               {visibleAnnouncements.length > 1 && (
                 <button
@@ -243,7 +297,7 @@ export const AnnouncementBanner: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center px-4 lg:px-0">
             {/* Left: Title and Content */}
             <div className="lg:col-span-2">
               <h3 className="text-3xl lg:text-4xl font-bold mb-4 font-outfit">
@@ -261,7 +315,7 @@ export const AnnouncementBanner: React.FC = () => {
                   href={currentAnnouncement.learnmore_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#C80650] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#A0052E] transition-colors flex items-center justify-center space-x-2 font-outfit uppercase tracking-wide"
+                  className="bg-[#C80650] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#A0052E] transition-colors flex items-center justify-center space-x-2 font-outfit uppercase tracking-wide"
                 >
                   <span>Learn More</span>
                   <ExternalLink size={16} />
@@ -271,7 +325,7 @@ export const AnnouncementBanner: React.FC = () => {
               {getEntityLink(currentAnnouncement) && (
                 <Link
                   to={getEntityLink(currentAnnouncement)!}
-                  className="bg-[#FFCE03] text-black px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors text-center font-outfit uppercase tracking-wide"
+                  className="bg-[#FFCE03] text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors text-center font-outfit uppercase tracking-wide"
                 >
                   {getEntityName(currentAnnouncement)} Link
                 </Link>
@@ -280,7 +334,7 @@ export const AnnouncementBanner: React.FC = () => {
           </div>
           
           {/* Bottom: Relevance Question and Voting */}
-          <div className="mt-8 pt-6 border-t border-white/20">
+          <div className="mt-8 pt-6 border-t border-white/20 px-4 lg:px-0">
             <p className="text-lg text-white mb-4 font-outfit">Did you find this announcement relevant?</p>
             <div className="flex items-center space-x-4">
               <button
