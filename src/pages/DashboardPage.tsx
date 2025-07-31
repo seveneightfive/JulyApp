@@ -174,7 +174,7 @@ export const DashboardPage: React.FC = () => {
         .from('announcements')
         .select(`
           *,
-          announcement_reactions(reaction_type)
+          announcement_reactions(reaction_type, user_id)
         `)
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
@@ -182,7 +182,8 @@ export const DashboardPage: React.FC = () => {
       if (announcementsData) {
         const announcementsWithCounts = announcementsData.map(announcement => ({
           ...announcement,
-          reaction_count: announcement.announcement_reactions?.length || 0
+          thumbs_up: announcement.announcement_reactions?.filter(r => r.reaction_type === 'thumbs_up').length || 0,
+          thumbs_down: announcement.announcement_reactions?.filter(r => r.reaction_type === 'heart').length || 0
         }))
         setUserAnnouncements(announcementsWithCounts)
       }
@@ -379,9 +380,15 @@ export const DashboardPage: React.FC = () => {
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-semibold text-gray-900">{announcement.title}</h4>
                         <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-1 text-sm text-gray-600">
-                            <Heart size={14} />
-                            <span>{announcement.reaction_count}</span>
+                          <div className="flex items-center space-x-3 text-sm text-gray-600">
+                            <div className="flex items-center space-x-1">
+                              <span className="text-red-600">👎</span>
+                              <span>{announcement.thumbs_down || 0}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span className="text-green-600">👍</span>
+                              <span>{announcement.thumbs_up || 0}</span>
+                            </div>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             isExpired 

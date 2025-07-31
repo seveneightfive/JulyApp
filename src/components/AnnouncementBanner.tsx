@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight, Megaphone, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { supabase, type Announcement, type AnnouncementReaction } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -214,15 +214,10 @@ export const AnnouncementBanner: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-r from-[#C80650] to-purple-600 text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-black/10"></div>
+    <div className="bg-black text-white relative overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="hidden sm:block">
-              <Megaphone size={20} className="text-white/80" />
-            </div>
-            
+        <div className="py-8">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
               {visibleAnnouncements.length > 1 && (
                 <button
@@ -246,17 +241,66 @@ export const AnnouncementBanner: React.FC = () => {
                 </button>
               )}
             </div>
-
-            <button
-              onClick={() => setIsVisible(false)}
-              className="p-1 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
-            >
-              <X size={16} />
-            </button>
           </div>
 
-          <div className="text-center mb-3">
-            <h3 className="font-semibold text-lg mb-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            {/* Left: Title and Content */}
+            <div className="lg:col-span-2">
+              <h3 className="text-3xl lg:text-4xl font-bold mb-4 font-outfit">
+                {currentAnnouncement.title}
+              </h3>
+              <p className="text-lg opacity-90 mb-6 font-outfit">
+                {currentAnnouncement.content}
+              </p>
+            </div>
+            
+            {/* Right: Action Buttons */}
+            <div className="flex flex-col space-y-3">
+              {currentAnnouncement.learnmore_link && (
+                <a
+                  href={currentAnnouncement.learnmore_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#C80650] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#A0052E] transition-colors flex items-center justify-center space-x-2 font-outfit uppercase tracking-wide"
+                >
+                  <span>Learn More</span>
+                  <ExternalLink size={16} />
+                </a>
+              )}
+              
+              {getEntityLink(currentAnnouncement) && (
+                <Link
+                  to={getEntityLink(currentAnnouncement)!}
+                  className="bg-[#FFCE03] text-black px-6 py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors text-center font-outfit uppercase tracking-wide"
+                >
+                  {getEntityName(currentAnnouncement)} Link
+                </Link>
+              )}
+            </div>
+          </div>
+          
+          {/* Bottom: Relevance Question and Voting */}
+          <div className="mt-8 pt-6 border-t border-white/20">
+            <p className="text-lg text-white mb-4 font-outfit">Did you find this announcement relevant?</p>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => handleReaction(currentAnnouncement.id, 'heart')}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 font-outfit"
+              >
+                <span>No</span>
+                <span className="bg-white/20 px-2 py-1 rounded-full text-sm">({currentReactions.no})</span>
+              </button>
+              
+              <button
+                onClick={() => handleReaction(currentAnnouncement.id, 'thumbs_up')}
+                className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 font-outfit"
+              >
+                <span>Yes</span>
+                <span className="bg-white/20 px-2 py-1 rounded-full text-sm">({currentReactions.yes})</span>
+              </button>
+            </div>
+          </div>
+        </div>
               {currentAnnouncement.title}
             </h3>
             <p className="text-sm opacity-90 mb-3">
@@ -276,58 +320,5 @@ export const AnnouncementBanner: React.FC = () => {
                   <ExternalLink size={14} />
                 </a>
               )}
-              
-              {getEntityLink(currentAnnouncement) && (
-                <Link
-                  to={getEntityLink(currentAnnouncement)!}
-                  className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors"
-                >
-                  View {getEntityName(currentAnnouncement)}
-                </Link>
-              )}
-            </div>
-            
-            {/* Relevance Question and Voting */}
-            <div className="space-y-2">
-              <p className="text-sm text-white/90">Did you find this announcement relevant?</p>
-              <div className="flex items-center justify-center space-x-4">
-                <button
-                  onClick={() => handleReaction(currentAnnouncement.id, 'heart')}
-                  className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center space-x-2"
-                >
-                  <span>No</span>
-                  <span className="text-xs">({currentReactions.no})</span>
-                </button>
-                
-                <button
-                  onClick={() => handleReaction(currentAnnouncement.id, 'thumbs_up')}
-                  className="bg-white/20 text-white px-4 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center space-x-2"
-                >
-                  <span>Yes</span>
-                  <span className="text-xs">({currentReactions.yes})</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {visibleAnnouncements.length > 1 && (
-          <div className="flex justify-center space-x-2 pb-3">
-            {visibleAnnouncements.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setCurrentIndex(index)
-                  setIsAutoScrolling(false)
-                }}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  index === currentIndex ? 'bg-white' : 'bg-white/50'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
   )
 }
