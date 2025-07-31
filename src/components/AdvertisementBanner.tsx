@@ -19,15 +19,14 @@ export const AdvertisementBanner: React.FC = () => {
         .gte('end_date', new Date().toISOString().split('T')[0])
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
 
-      if (data) {
-        setAdvertisement(data)
+      if (data && data.length > 0) {
+        setAdvertisement(data[0])
         // Track view
         await supabase
           .from('advertisements')
-          .update({ views: data.views + 1 })
-          .eq('id', data.id)
+          .update({ views: data[0].views + 1 })
+          .eq('id', data[0].id)
       }
     } catch (error) {
       // No active ads or error - this is fine
