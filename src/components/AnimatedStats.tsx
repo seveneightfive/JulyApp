@@ -79,7 +79,7 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
       label: 'EVENTS',
       link: '/events',
       icon: Calendar,
-      color: 'from-blue-500 to-purple-600',
+      color: 'from-blue-500 to-[#C80650]',
       delay: 0
     },
     {
@@ -87,7 +87,7 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
       label: 'ARTISTS',
       link: '/artists',
       icon: Music,
-      color: 'from-purple-500 to-pink-600',
+      color: 'from-[#C80650] to-purple-600',
       delay: 500
     },
     {
@@ -95,7 +95,7 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
       label: 'PLACES',
       link: '/venues',
       icon: MapPin,
-      color: 'from-teal-500 to-blue-600',
+      color: 'from-[#FFCE03] to-orange-500',
       delay: 1000
     }
   ]
@@ -112,16 +112,12 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-col items-center gap-y-4 md:grid md:grid-cols-3 md:gap-8 lg:gap-12">
+        <div className="grid grid-cols-3 gap-4 md:gap-8 lg:gap-12">
           {stats.map((stat, index) => (
             <Link
               key={stat.label}
               to={stat.link}
-              className={`group block text-center transform hover:scale-105 transition-all duration-300 md:self-auto md:translate-y-0 ${
-                index === 1 ? 'self-end translate-y-2' : 
-                index === 2 ? 'self-start translate-y-2' : 
-                'self-start'
-              }`}
+              className="group block text-center transform hover:scale-105 transition-all duration-300"
               style={{
                 animationDelay: `${stat.delay}ms`,
                 animation: isVisible ? 'fadeInUp 1s ease-out forwards' : 'none',
@@ -130,12 +126,12 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
             >
               <div className="relative mb-6">
                 {/* Animated Circle Background */}
-                <div className={`w-32 h-32 lg:w-40 lg:h-40 mx-auto rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
+                <div className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 mx-auto rounded-full bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
                 </div>
                 
                 {/* Animated Number */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-4xl lg:text-6xl font-bold font-oswald text-white drop-shadow-lg">
+                  <span className="text-lg sm:text-2xl md:text-4xl lg:text-6xl font-bold font-oswald text-white drop-shadow-lg">
                     {stat.count}
                   </span>
                 </div>
@@ -143,11 +139,11 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
               
               {/* Label */}
               <div className="space-y-2">
-                <h3 className="text-2xl lg:text-3xl font-bold font-oswald text-gray-900 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-sm sm:text-lg md:text-2xl lg:text-3xl font-bold font-oswald text-gray-900 group-hover:text-[#C80650] transition-colors">
                   {stat.label}
                 </h3>
-                <p className="text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Explore {stat.label.toLowerCase()}
+                <p className="text-xs sm:text-sm md:text-base text-gray-600 group-hover:text-gray-900 transition-colors">
+                  <span className="hidden sm:inline">Explore </span>{stat.label.toLowerCase()}
                 </p>
               </div>
             </Link>
