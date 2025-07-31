@@ -29,12 +29,7 @@ export const AnnouncementBanner: React.FC = () => {
   const fetchAnnouncements = async () => {
     const { data } = await supabase
       .from('announcements')
-      .select(`
-        *,
-        event:events(id, title, slug),
-        artist:artists(id, name, slug),
-        venue:venues(id, name, slug)
-      `)
+      .select('*')
       .eq('active', true)
       .or('expires_at.is.null,expires_at.gt.now()')
       .order('priority', { ascending: false })
@@ -139,27 +134,27 @@ export const AnnouncementBanner: React.FC = () => {
   const currentUserReactions = userReactions[currentAnnouncement?.id] || []
 
   const getEntityLink = (announcement: Announcement) => {
-    if (announcement.entity_type === 'event' && announcement.event) {
-      return `/events/${announcement.event.slug}`
+    if (announcement.entity_type === 'event' && announcement.entity_id) {
+      return `/events/${announcement.entity_id}`
     }
-    if (announcement.entity_type === 'artist' && announcement.artist) {
-      return `/artists/${announcement.artist.slug}`
+    if (announcement.entity_type === 'artist' && announcement.entity_id) {
+      return `/artists/${announcement.entity_id}`
     }
-    if (announcement.entity_type === 'venue' && announcement.venue) {
-      return `/venues/${announcement.venue.slug}`
+    if (announcement.entity_type === 'venue' && announcement.entity_id) {
+      return `/venues/${announcement.entity_id}`
     }
     return null
   }
 
   const getEntityName = (announcement: Announcement) => {
-    if (announcement.entity_type === 'event' && announcement.event) {
-      return announcement.event.title
+    if (announcement.entity_type === 'event') {
+      return 'Event'
     }
-    if (announcement.entity_type === 'artist' && announcement.artist) {
-      return announcement.artist.name
+    if (announcement.entity_type === 'artist') {
+      return 'Artist'
     }
-    if (announcement.entity_type === 'venue' && announcement.venue) {
-      return announcement.venue.name
+    if (announcement.entity_type === 'venue') {
+      return 'Venue'
     }
     return null
   }
