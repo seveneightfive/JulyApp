@@ -600,7 +600,7 @@ export const ArtistDetailPage: React.FC = () => {
 
           {/* Reviews Section */}
           <div className="mt-8">
-            <ReviewSection entityType="artist" entityId={artist.id} />
+            <ReviewSection entityType="artist" entityId={artist.id} createdBy={artist.created_by} />
           </div>
         </div>
 

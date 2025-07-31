@@ -390,7 +390,7 @@ export const VenueDetailPage: React.FC = () => {
 
           {/* Reviews Section */}
           <div className="mt-8">
-            <ReviewSection entityType="venue" entityId={venue.id} />
+            <ReviewSection entityType="venue" entityId={venue.id} createdBy={venue.created_by} />
           </div>
         </div>
       </div>
