@@ -385,6 +385,22 @@ export const ArtistsDirectoryPage: React.FC = () => {
 
 // Mobile Artist Card Component with horizontal layout
 const MobileArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => {
+  const [upcomingEventsCount, setUpcomingEventsCount] = useState(0)
+
+  useEffect(() => {
+    fetchUpcomingEventsCount()
+  }, [artist.id])
+
+  const fetchUpcomingEventsCount = async () => {
+    const { count } = await supabase
+      .from('event_artists')
+      .select('events!inner(start_date)', { count: 'exact', head: true })
+      .eq('artist_id', artist.id)
+      .gte('events.start_date', new Date().toISOString())
+
+    setUpcomingEventsCount(count || 0)
+  }
+
   const getArtistTypeIcon = (type: string) => {
     switch (type) {
       case 'Musician':
@@ -403,8 +419,20 @@ const MobileArtistCard: React.FC<{ artist: Artist }> = ({ artist }) => {
   return (
     <Link 
       to={`/artists/${artist.slug}`}
-      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden mx-2"
+      className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden mx-2 relative"
     >
+      {/* Event Count Badge - Top Right */}
+      {upcomingEventsCount > 0 && (
+        <div className="absolute top-2 right-2 z-10">
+          <div 
+            className="w-6 h-6 rounded-full flex items-center justify-center text-black text-xs font-bold shadow-lg"
+            style={{ backgroundColor: '#FFCE03' }}
+          >
+            {upcomingEventsCount}
+          </div>
+        </div>
+      )}
+      
       <div className="flex">
         {/* Artist Image */}
         <div className="w-20 h-20 bg-gray-200 overflow-hidden flex-shrink-0">
