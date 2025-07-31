@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X, Eye, Megaphone, Plus, ThumbsUp } from 'lucide-react'
+import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X, Eye, Megaphone, Plus, ThumbsUp, DollarSign, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
 import { ArtistCard } from '../components/ArtistCard'
 import { VenueCard } from '../components/VenueCard'
 import { AnnouncementForm } from '../components/AnnouncementForm'
+import { AdvertisementForm } from '../components/AdvertisementForm'
 import { useAuth } from '../hooks/useAuth'
-import { supabase, type Event, type Artist, type Venue, type Follow, type EventRSVP, type Announcement, trackPageView } from '../lib/supabase'
+import { supabase, type Event, type Artist, type Venue, type Follow, type EventRSVP, type Announcement, type Advertisement, trackPageView } from '../lib/supabase'
 
 interface DashboardModal {
-  type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming' | 'announcements' | null
+  type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming' | 'announcements' | 'advertisements' | null
   isOpen: boolean
 }
 
@@ -22,17 +23,21 @@ export const DashboardPage: React.FC = () => {
   const [interestedEvents, setInterestedEvents] = useState<Event[]>([])
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [userAnnouncements, setUserAnnouncements] = useState<(Announcement & { reaction_count: number })[]>([])
+  const [userAdvertisements, setUserAdvertisements] = useState<Advertisement[]>([])
   const [stats, setStats] = useState({
     followedArtists: 0,
     followedVenues: 0,
     rsvpEvents: 0,
     interestedEvents: 0,
     upcomingEvents: 0,
-    announcements: 0
+    announcements: 0,
+    advertisements: 0,
+    totalAdSpend: 0
   })
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<DashboardModal>({ type: null, isOpen: false })
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false)
+  const [showAdvertisementForm, setShowAdvertisementForm] = useState(false)
 
   useEffect(() => {
     trackPageView('dashboard')
@@ -182,14 +187,28 @@ export const DashboardPage: React.FC = () => {
         setUserAnnouncements(announcementsWithCounts)
       }
 
+      // Fetch user's advertisements
+      const { data: advertisementsData } = await supabase
+        .from('advertisements')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (advertisementsData) {
+        setUserAdvertisements(advertisementsData)
+      }
+
       // Update stats
+      const totalAdSpend = advertisementsData?.reduce((sum, ad) => sum + ad.price, 0) || 0
       setStats({
         followedArtists: artistFollows?.length || 0,
         followedVenues: venueFollows?.length || 0,
         rsvpEvents: rsvps?.length || 0,
         interestedEvents: interestedRsvps?.length || 0,
         upcomingEvents: upcomingEventsData.length,
-        announcements: announcementsData?.length || 0
+        announcements: announcementsData?.length || 0,
+        advertisements: advertisementsData?.length || 0,
+        totalAdSpend: totalAdSpend
       })
 
     } catch (error) {
@@ -205,6 +224,10 @@ export const DashboardPage: React.FC = () => {
 
   const openAnnouncementsModal = () => {
     setModal({ type: 'announcements', isOpen: true })
+  }
+
+  const openAdvertisementsModal = () => {
+    setModal({ type: 'advertisements', isOpen: true })
   }
 
   const closeModal = () => {
@@ -400,6 +423,90 @@ export const DashboardPage: React.FC = () => {
           </div>
         )
       
+      case 'advertisements':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Your Advertisements ({stats.advertisements})</h3>
+                <p className="text-sm text-gray-600">Total Spend: ${(stats.totalAdSpend / 100).toFixed(2)}</p>
+              </div>
+              <button
+                onClick={() => {
+                  closeModal()
+                  setShowAdvertisementForm(true)
+                }}
+                className="btn-yellow flex items-center space-x-2"
+              >
+                <Plus size={16} />
+                <span>New Ad</span>
+              </button>
+            </div>
+            {userAdvertisements.length > 0 ? (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {userAdvertisements.map((ad) => {
+                  const isActive = new Date(ad.start_date) <= new Date() && new Date(ad.end_date) >= new Date()
+                  const isExpired = new Date(ad.end_date) < new Date()
+                  const isPending = new Date(ad.start_date) > new Date()
+                  
+                  return (
+                    <div key={ad.id} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">{ad.title}</h4>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1 text-sm text-gray-600">
+                            <Eye size={14} />
+                            <span>{ad.views}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 text-sm text-gray-600">
+                            <ExternalLink size={14} />
+                            <span>{ad.clicks}</span>
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            isActive 
+                              ? 'bg-green-100 text-green-800' 
+                              : isExpired
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {isActive ? 'Active' : isExpired ? 'Expired' : 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-2">{ad.content}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>
+                          {new Date(ad.start_date).toLocaleDateString()} - {new Date(ad.end_date).toLocaleDateString()}
+                        </span>
+                        <span>${(ad.price / 100).toFixed(2)} ({ad.duration} days)</span>
+                      </div>
+                      {ad.clicks > 0 && ad.views > 0 && (
+                        <div className="mt-2 text-xs text-gray-500">
+                          CTR: {((ad.clicks / ad.views) * 100).toFixed(1)}%
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <DollarSign size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600 mb-4">You haven't created any advertisements yet.</p>
+                <button
+                  onClick={() => {
+                    closeModal()
+                    setShowAdvertisementForm(true)
+                  }}
+                  className="btn-yellow"
+                >
+                  Create Your First Ad
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      
       default:
         return null
     }
@@ -443,7 +550,7 @@ export const DashboardPage: React.FC = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-7 gap-4 lg:gap-6 mb-8">
             <button
               onClick={() => openModal('artists')}
               className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
@@ -533,6 +640,21 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
             </button>
+
+            <button
+              onClick={openAdvertisementsModal}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
+              <div className="flex items-center">
+                <div className="bg-yellow-100 p-3 rounded-lg group-hover:bg-yellow-200 transition-colors">
+                  <DollarSign className="text-yellow-600" size={20} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">{stats.advertisements}</p>
+                  <p className="text-sm text-gray-600">Ads</p>
+                </div>
+              </div>
+            </button>
           </div>
 
           {/* Quick Actions */}
@@ -567,11 +689,18 @@ export const DashboardPage: React.FC = () => {
                 <Megaphone className="text-orange-600 mr-3" size={20} />
                 <span className="font-medium text-gray-900">Create Announcement</span>
               </button>
+              <button
+                onClick={() => setShowAdvertisementForm(true)}
+                className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <DollarSign className="text-yellow-600 mr-3" size={20} />
+                <span className="font-medium text-gray-900">Create Advertisement</span>
+              </button>
             </div>
           </div>
 
           {/* Empty State */}
-          {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && stats.interestedEvents === 0 && stats.announcements === 0 && (
+          {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && stats.interestedEvents === 0 && stats.announcements === 0 && stats.advertisements === 0 && (
             <div className="text-center py-12 mt-8">
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <Heart size={48} className="mx-auto mb-4 text-gray-400" />
@@ -620,6 +749,14 @@ export const DashboardPage: React.FC = () => {
         <AnnouncementForm
           isOpen={showAnnouncementForm}
           onClose={() => setShowAnnouncementForm(false)}
+          onSuccess={() => {
+            fetchDashboardData()
+          }}
+        />
+
+        <AdvertisementForm
+          isOpen={showAdvertisementForm}
+          onClose={() => setShowAdvertisementForm(false)}
           onSuccess={() => {
             fetchDashboardData()
           }}

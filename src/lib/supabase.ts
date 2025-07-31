@@ -152,6 +152,24 @@ export interface AnnouncementReaction {
   created_at?: string
 }
 
+export interface Advertisement {
+  id: string
+  title: string
+  content: string
+  background_image?: string
+  button_text: string
+  button_link: string
+  start_date: string
+  end_date: string
+  views: number
+  clicks: number
+  user_id?: string
+  duration: number
+  price: number
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Follow {
   id: string
   follower_id?: string

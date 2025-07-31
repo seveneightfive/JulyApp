@@ -7,6 +7,7 @@ import { ArtistCard } from '../components/ArtistCard'
 import { VenueCard } from '../components/VenueCard'
 import { AnimatedStats } from '../components/AnimatedStats'
 import { AnnouncementBanner } from '../components/AnnouncementBanner'
+import { AdvertisementBanner } from '../components/AdvertisementBanner'
 import { supabase, type Event, type Artist, type Venue, trackPageView } from '../lib/supabase'
 
 export const HomePage: React.FC = () => {
@@ -358,29 +359,8 @@ export const HomePage: React.FC = () => {
             </section>
           )}
 
-          {/* Call to Action Section */}
-          <section className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 lg:p-12 text-center text-white">
-            <h2 className="text-2xl lg:text-3xl font-bold font-oswald mb-4">
-              Join the Community
-            </h2>
-            <p className="text-lg mb-8 opacity-90">
-              Discover amazing events, connect with local artists, and explore unique venues in your area.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                to="/events"
-                className="btn-white"
-              >
-                Browse Events
-              </Link>
-              <Link
-                to="/artists"
-                className="btn-black"
-              >
-                Meet Artists
-              </Link>
-            </div>
-          </section>
+          {/* Advertisement Section */}
+          <AdvertisementBanner />
         </div>
       </div>
     </Layout>
