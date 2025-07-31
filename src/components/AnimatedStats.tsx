@@ -136,20 +136,15 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
                   </span>
                 </div>
               </div>
-              
 
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
+              
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg font-bold font-oswald text-gray-900 group-hover:text-gray-700 transition-colors duration-300">
+                {stat.label}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }
