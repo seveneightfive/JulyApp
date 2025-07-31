@@ -301,24 +301,7 @@ export const AnnouncementBanner: React.FC = () => {
             </div>
           </div>
         </div>
-              {currentAnnouncement.title}
-            </h3>
-            <p className="text-sm opacity-90 mb-3">
-              {currentAnnouncement.content}
-            </p>
-            
-            {/* Action Buttons */}
-            <div className="flex items-center justify-center space-x-4 mb-3">
-              {currentAnnouncement.learnmore_link && (
-                <a
-                  href={currentAnnouncement.learnmore_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#FFCE03] text-black px-4 py-2 rounded-lg font-medium hover:bg-yellow-400 transition-colors flex items-center space-x-2"
-                >
-                  <span>Learn More</span>
-                  <ExternalLink size={14} />
-                </a>
-              )}
+      </div>
+    </div>
   )
 }
