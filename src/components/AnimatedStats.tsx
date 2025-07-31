@@ -137,19 +137,6 @@ export const AnimatedStats: React.FC<AnimatedStatsProps> = ({
                 </div>
               </div>
               
-              {/* Label */}
-              <div className="space-y-2">
-                <h3 className="text-sm sm:text-lg md:text-2xl lg:text-3xl font-bold font-oswald text-gray-900 group-hover:text-[#C80650] transition-colors">
-                  {stat.label}
-                </h3>
-                <p className="text-xs sm:text-sm md:text-base text-gray-600 group-hover:text-gray-900 transition-colors">
-                  <span className="hidden sm:inline">Explore </span>{stat.label.toLowerCase()}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
 
       <style jsx>{`
         @keyframes fadeInUp {
