@@ -6,6 +6,7 @@ import { EventCard } from '../components/EventCard'
 import { ArtistCard } from '../components/ArtistCard'
 import { VenueCard } from '../components/VenueCard'
 import { AnimatedStats } from '../components/AnimatedStats'
+import { AnnouncementBanner } from '../components/AnnouncementBanner'
 import { supabase, type Event, type Artist, type Venue, trackPageView } from '../lib/supabase'
 
 export const HomePage: React.FC = () => {
@@ -141,6 +142,9 @@ export const HomePage: React.FC = () => {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
+        {/* Announcement Banner */}
+        <AnnouncementBanner />
+        
         {/* Hero Section with Starred Events Slider */}
         {starredEvents.length > 0 && (
           <section 

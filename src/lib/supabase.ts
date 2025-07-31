@@ -138,7 +138,17 @@ export interface Announcement {
   priority?: number
   active?: boolean
   expires_at?: string
+  expires_in?: number
+  learnmore_link?: string
   created_by?: string
+  created_at?: string
+}
+
+export interface AnnouncementReaction {
+  id: string
+  user_id?: string
+  announcement_id: string
+  reaction_type: 'heart' | 'thumbs_up'
   created_at?: string
 }
 

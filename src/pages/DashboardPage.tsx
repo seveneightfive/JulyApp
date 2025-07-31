@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X, Eye } from 'lucide-react'
+import { Calendar, Music, MapPin, Heart, Users, TrendingUp, Clock, Star, X, Eye, Megaphone, Plus, ThumbsUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
 import { ArtistCard } from '../components/ArtistCard'
 import { VenueCard } from '../components/VenueCard'
+import { AnnouncementForm } from '../components/AnnouncementForm'
 import { useAuth } from '../hooks/useAuth'
-import { supabase, type Event, type Artist, type Venue, type Follow, type EventRSVP, trackPageView } from '../lib/supabase'
+import { supabase, type Event, type Artist, type Venue, type Follow, type EventRSVP, type Announcement, trackPageView } from '../lib/supabase'
 
 interface DashboardModal {
-  type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming' | null
+  type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming' | 'announcements' | null
   isOpen: boolean
 }
 
@@ -20,15 +21,18 @@ export const DashboardPage: React.FC = () => {
   const [rsvpEvents, setRsvpEvents] = useState<Event[]>([])
   const [interestedEvents, setInterestedEvents] = useState<Event[]>([])
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
+  const [userAnnouncements, setUserAnnouncements] = useState<(Announcement & { reaction_count: number })[]>([])
   const [stats, setStats] = useState({
     followedArtists: 0,
     followedVenues: 0,
     rsvpEvents: 0,
     interestedEvents: 0,
-    upcomingEvents: 0
+    upcomingEvents: 0,
+    announcements: 0
   })
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<DashboardModal>({ type: null, isOpen: false })
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false)
 
   useEffect(() => {
     trackPageView('dashboard')
@@ -160,13 +164,32 @@ export const DashboardPage: React.FC = () => {
       upcomingEventsData.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
       setUpcomingEvents(upcomingEventsData)
 
+      // Fetch user's announcements
+      const { data: announcementsData } = await supabase
+        .from('announcements')
+        .select(`
+          *,
+          announcement_reactions(reaction_type)
+        `)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+
+      if (announcementsData) {
+        const announcementsWithCounts = announcementsData.map(announcement => ({
+          ...announcement,
+          reaction_count: announcement.announcement_reactions?.length || 0
+        }))
+        setUserAnnouncements(announcementsWithCounts)
+      }
+
       // Update stats
       setStats({
         followedArtists: artistFollows?.length || 0,
         followedVenues: venueFollows?.length || 0,
         rsvpEvents: rsvps?.length || 0,
         interestedEvents: interestedRsvps?.length || 0,
-        upcomingEvents: upcomingEventsData.length
+        upcomingEvents: upcomingEventsData.length,
+        announcements: announcementsData?.length || 0
       })
 
     } catch (error) {
@@ -178,6 +201,10 @@ export const DashboardPage: React.FC = () => {
 
   const openModal = (type: 'artists' | 'venues' | 'rsvps' | 'interested' | 'upcoming') => {
     setModal({ type, isOpen: true })
+  }
+
+  const openAnnouncementsModal = () => {
+    setModal({ type: 'announcements', isOpen: true })
   }
 
   const closeModal = () => {
@@ -302,6 +329,77 @@ export const DashboardPage: React.FC = () => {
           </div>
         )
       
+      case 'announcements':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">Your Announcements ({stats.announcements})</h3>
+              <button
+                onClick={() => {
+                  closeModal()
+                  setShowAnnouncementForm(true)
+                }}
+                className="btn-pink flex items-center space-x-2"
+              >
+                <Plus size={16} />
+                <span>New</span>
+              </button>
+            </div>
+            {userAnnouncements.length > 0 ? (
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {userAnnouncements.map((announcement) => {
+                  const isExpired = announcement.expires_at && new Date(announcement.expires_at) < new Date()
+                  const expiresAt = announcement.expires_at ? new Date(announcement.expires_at) : null
+                  
+                  return (
+                    <div key={announcement.id} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">{announcement.title}</h4>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1 text-sm text-gray-600">
+                            <Heart size={14} />
+                            <span>{announcement.reaction_count}</span>
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            isExpired 
+                              ? 'bg-red-100 text-red-800' 
+                              : announcement.active 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {isExpired ? 'Expired' : announcement.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 text-sm mb-2">{announcement.content}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Created: {new Date(announcement.created_at).toLocaleDateString()}</span>
+                        {expiresAt && (
+                          <span>Expires: {expiresAt.toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Megaphone size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600 mb-4">You haven't created any announcements yet.</p>
+                <button
+                  onClick={() => {
+                    closeModal()
+                    setShowAnnouncementForm(true)
+                  }}
+                  className="btn-pink"
+                >
+                  Create Your First Announcement
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      
       default:
         return null
     }
@@ -345,7 +443,7 @@ export const DashboardPage: React.FC = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 mb-8">
             <button
               onClick={() => openModal('artists')}
               className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
@@ -420,12 +518,27 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
             </button>
+
+            <button
+              onClick={openAnnouncementsModal}
+              className="bg-white rounded-xl p-4 lg:p-6 shadow-sm hover:shadow-md transition-all duration-200 text-left group"
+            >
+              <div className="flex items-center">
+                <div className="bg-orange-100 p-3 rounded-lg group-hover:bg-orange-200 transition-colors">
+                  <Megaphone className="text-orange-600" size={20} />
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-bold text-gray-900">{stats.announcements}</p>
+                  <p className="text-sm text-gray-600">Announcements</p>
+                </div>
+              </div>
+            </button>
           </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <Link
                 to="/events"
                 className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -447,11 +560,18 @@ export const DashboardPage: React.FC = () => {
                 <MapPin className="text-teal-600 mr-3" size={20} />
                 <span className="font-medium text-gray-900">Find Venues</span>
               </Link>
+              <button
+                onClick={() => setShowAnnouncementForm(true)}
+                className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Megaphone className="text-orange-600 mr-3" size={20} />
+                <span className="font-medium text-gray-900">Create Announcement</span>
+              </button>
             </div>
           </div>
 
           {/* Empty State */}
-          {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && stats.interestedEvents === 0 && (
+          {stats.followedArtists === 0 && stats.followedVenues === 0 && stats.rsvpEvents === 0 && stats.interestedEvents === 0 && stats.announcements === 0 && (
             <div className="text-center py-12 mt-8">
               <div className="bg-white rounded-2xl p-8 shadow-sm">
                 <Heart size={48} className="mx-auto mb-4 text-gray-400" />
@@ -496,6 +616,14 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        <AnnouncementForm
+          isOpen={showAnnouncementForm}
+          onClose={() => setShowAnnouncementForm(false)}
+          onSuccess={() => {
+            fetchDashboardData()
+          }}
+        />
       </div>
     </Layout>
   )
