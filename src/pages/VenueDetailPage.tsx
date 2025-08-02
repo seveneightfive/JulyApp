@@ -4,8 +4,11 @@ import { MapPin, Phone, Globe, Heart, Share2, ArrowLeft, Users, Calendar } from 
 import { Layout } from '../components/Layout'
 import { ReviewSection } from '../components/ReviewSection'
 import { EventCard } from '../components/EventCard'
+import { MenuProcCard } from '../components/MenuProcCard'
+import { MenuProcModal } from '../components/MenuProcModal'
+import { MenuProcForm } from '../components/MenuProcForm'
 import { useAuth } from '../hooks/useAuth'
-import { supabase, type Venue, type Event, trackPageView } from '../lib/supabase'
+import { supabase, type Venue, type Event, type MenuProc, trackPageView } from '../lib/supabase'
 
 export const VenueDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -13,9 +16,13 @@ export const VenueDetailPage: React.FC = () => {
   const { user } = useAuth()
   const [venue, setVenue] = useState<Venue | null>(null)
   const [events, setEvents] = useState<Event[]>([])
+  const [menuProcs, setMenuProcs] = useState<MenuProc[]>([])
   const [loading, setLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
+  const [selectedMenuProc, setSelectedMenuProc] = useState<MenuProc | null>(null)
+  const [showMenuProcModal, setShowMenuProcModal] = useState(false)
+  const [showMenuProcForm, setShowMenuProcForm] = useState(false)
 
   useEffect(() => {
     if (slug) {
@@ -27,6 +34,9 @@ export const VenueDetailPage: React.FC = () => {
   useEffect(() => {
     if (venue && user) {
       checkFollowStatus()
+    }
+    if (venue) {
+      fetchMenuProcs()
     }
   }, [venue, user])
 
@@ -68,6 +78,24 @@ export const VenueDetailPage: React.FC = () => {
 
     if (data) {
       setEvents(data)
+    }
+  }
+
+  const fetchMenuProcs = async () => {
+    if (!venue) return
+
+    const { data } = await supabase
+      .from('menu_procs')
+      .select(`
+        *,
+        venue:venues(*),
+        user:profiles(username, full_name)
+      `)
+      .eq('venue_id', venue.id)
+      .order('created_at', { ascending: false })
+
+    if (data) {
+      setMenuProcs(data)
     }
   }
 
@@ -129,6 +157,13 @@ export const VenueDetailPage: React.FC = () => {
       navigator.clipboard.writeText(window.location.href)
     }
   }
+
+  const handleMenuProcClick = (menuProc: MenuProc) => {
+    setSelectedMenuProc(menuProc)
+    setShowMenuProcModal(true)
+  }
+
+  const isRestaurantOrBar = venue?.venue_type === 'Restaurant' || venue?.venue_type === 'Bar/Tavern'
 
   if (loading) {
     return (
@@ -335,6 +370,45 @@ export const VenueDetailPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Menu Procs Section */}
+              {isRestaurantOrBar && (
+                <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900">Menu Procs</h2>
+                    <button
+                      onClick={() => setShowMenuProcForm(true)}
+                      className="btn-yellow text-sm"
+                    >
+                      Add Menu Proc
+                    </button>
+                  </div>
+                  
+                  {menuProcs.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {menuProcs.map((menuProc) => (
+                        <MenuProcCard
+                          key={menuProc.id}
+                          menuProc={menuProc}
+                          onClick={() => handleMenuProcClick(menuProc)}
+                          showVenue={false}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <span className="text-4xl mb-4 block">🍽️</span>
+                      <p>No Menu Procs yet. Be the first to share your favorite dish!</p>
+                      <button
+                        onClick={() => setShowMenuProcForm(true)}
+                        className="btn-yellow mt-4"
+                      >
+                        Create Menu Proc
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Upcoming Events */}
               {events.length > 0 && (
                 <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
@@ -394,6 +468,23 @@ export const VenueDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+        <MenuProcModal
+          menuProc={selectedMenuProc}
+          isOpen={showMenuProcModal}
+          onClose={() => {
+            setShowMenuProcModal(false)
+            setSelectedMenuProc(null)
+          }}
+        />
+
+        <MenuProcForm
+          isOpen={showMenuProcForm}
+          onClose={() => setShowMenuProcForm(false)}
+          onSuccess={() => {
+            fetchMenuProcs()
+          }}
+          preselectedVenue={venue}
+        />
     </Layout>
   )
 }

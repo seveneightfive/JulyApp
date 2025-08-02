@@ -170,6 +170,19 @@ export interface Advertisement {
   updated_at?: string
 }
 
+export interface MenuProc {
+  id: string
+  title: string
+  content: string
+  images: string[]
+  venue_id: string
+  user_id: string
+  created_at?: string
+  updated_at?: string
+  venue?: Venue
+  user?: Profile
+}
+
 export interface Follow {
   id: string
   follower_id?: string

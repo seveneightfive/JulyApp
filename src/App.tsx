@@ -10,6 +10,7 @@ import { ArtistDetailPage } from './pages/ArtistDetailPage'
 import { VenueDetailPage } from './pages/VenueDetailPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { DashboardPage } from './pages/DashboardPage'
+import { FeedPage } from './pages/FeedPage'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/events" element={<EventsDirectoryPage />} />
         <Route path="/artists" element={<ArtistsDirectoryPage />} />
         <Route path="/venues" element={<VenuesDirectoryPage />} />

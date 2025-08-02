@@ -5,18 +5,23 @@ import { Layout } from '../components/Layout'
 import { EventCard } from '../components/EventCard'
 import { ArtistCard } from '../components/ArtistCard'
 import { VenueCard } from '../components/VenueCard'
+import { MenuProcCard } from '../components/MenuProcCard'
+import { MenuProcModal } from '../components/MenuProcModal'
 import { AnimatedStats } from '../components/AnimatedStats'
 import { AnnouncementBanner } from '../components/AnnouncementBanner'
 import { AdvertisementBanner } from '../components/AdvertisementBanner'
-import { supabase, type Event, type Artist, type Venue, trackPageView } from '../lib/supabase'
+import { supabase, type Event, type Artist, type Venue, type MenuProc, trackPageView } from '../lib/supabase'
 
 export const HomePage: React.FC = () => {
   const [starredEvents, setStarredEvents] = useState<Event[]>([])
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [featuredArtists, setFeaturedArtists] = useState<Artist[]>([])
   const [featuredVenues, setFeaturedVenues] = useState<Venue[]>([])
+  const [latestMenuProcs, setLatestMenuProcs] = useState<MenuProc[]>([])
   const [loading, setLoading] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [selectedMenuProc, setSelectedMenuProc] = useState<MenuProc | null>(null)
+  const [showMenuProcModal, setShowMenuProcModal] = useState(false)
   const [stats, setStats] = useState({
     totalEvents: 0,
     totalArtists: 0,
@@ -102,6 +107,21 @@ export const HomePage: React.FC = () => {
         setFeaturedVenues(venuesData)
       }
 
+      // Fetch latest menu procs
+      const { data: menuProcsData } = await supabase
+        .from('menu_procs')
+        .select(`
+          *,
+          venue:venues(*),
+          user:profiles(username, full_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      if (menuProcsData) {
+        setLatestMenuProcs(menuProcsData)
+      }
+
       // Fetch total counts for stats
       const [eventsCount, artistsCount, venuesCount] = await Promise.all([
         supabase.from('events').select('id', { count: 'exact', head: true }),
@@ -128,6 +148,11 @@ export const HomePage: React.FC = () => {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + starredEvents.length) % starredEvents.length)
+  }
+
+  const handleMenuProcClick = (menuProc: MenuProc) => {
+    setSelectedMenuProc(menuProc)
+    setShowMenuProcModal(true)
   }
 
   if (loading) {
@@ -266,6 +291,50 @@ export const HomePage: React.FC = () => {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+          {/* Latest Menu Procs Section */}
+          {latestMenuProcs.length > 0 && (
+            <section className="mb-12">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl lg:text-3xl font-bold font-oswald text-gray-900">
+                  Latest Menu Procs
+                </h2>
+                <Link
+                  to="/feed"
+                  className="text-orange-600 hover:text-orange-700 font-medium"
+                >
+                  See All →
+                </Link>
+              </div>
+              
+              {/* Desktop Grid */}
+              <div className="hidden lg:grid grid-cols-3 gap-6">
+                {latestMenuProcs.slice(0, 3).map((menuProc) => (
+                  <MenuProcCard
+                    key={menuProc.id}
+                    menuProc={menuProc}
+                    onClick={() => handleMenuProcClick(menuProc)}
+                    showVenue={true}
+                  />
+                ))}
+              </div>
+              
+              {/* Mobile Horizontal Scroll */}
+              <div className="lg:hidden overflow-x-auto">
+                <div className="flex space-x-4 pb-4">
+                  {latestMenuProcs.map((menuProc) => (
+                    <div key={menuProc.id} className="flex-shrink-0 w-64">
+                      <MenuProcCard
+                        menuProc={menuProc}
+                        onClick={() => handleMenuProcClick(menuProc)}
+                        showVenue={true}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Upcoming Events Section */}
           {upcomingEvents.length > 0 && (
             <section className="mb-12">
@@ -363,6 +432,14 @@ export const HomePage: React.FC = () => {
           <AdvertisementBanner />
         </div>
       </div>
+        <MenuProcModal
+          menuProc={selectedMenuProc}
+          isOpen={showMenuProcModal}
+          onClose={() => {
+            setShowMenuProcModal(false)
+            setSelectedMenuProc(null)
+          }}
+        />
     </Layout>
   )
 }
